@@ -1,6 +1,6 @@
 # Loom
 
-Agent-programmable pin/time engine for the Jane Street protocol-emulator ASIC contest (Tiny Tapeout CMOS5L, 8×4 tiles).
+Agent-programmable pin/time engine for the Jane Street protocol-emulator ASIC contest (Tiny Tapeout CMOS5L, 6×4 tiles).
 
 Protocols are graphs in `plans/`. The silicon is one ISA: pin, wait, delay, shift, fifo, jump. Load a new graph after tapeout; do not resynth.
 

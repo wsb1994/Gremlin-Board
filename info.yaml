@@ -7,8 +7,8 @@ project:
   language:     "Amaranth"
   clock_hz:     50000000
 
-  # Jane Street protocol-emulator contest: 8x4 Tiny Tapeout tiles on CMOS5L.
-  tiles: "8x4"
+  # Jane Street protocol-emulator contest: 6x4 Tiny Tapeout tiles on CMOS5L (8x4 is not a valid CMOS5L tile size).
+  tiles: "6x4"
 
   top_module:  "tt_um_loom_gpe"
 

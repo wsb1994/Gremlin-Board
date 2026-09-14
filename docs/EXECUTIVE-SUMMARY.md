@@ -10,8 +10,8 @@ Verdict: the architecture matches the brief (reprogrammable pin/time machine, no
 |------|--------|----------|
 | IHP 130nm CMOS5L via Tiny Tapeout | Partial | `.github/workflows/gds.yaml` uses `tt-gds-action@ihp-cmos5l`. GDS job has not been shown to pass. |
 | Start from CMOS5L Verilog template | Yes | Fork of `ttihp-verilog-template` cmos5l (`src/config.json` PDN 50.0 / 2.1). |
-| `info.yaml` tiles `8x4` | Yes | `info.yaml` tiles `"8x4"`, top `tt_um_loom_gpe`. |
-| Area ≤ 8×4 (~32k cells) | Likely, unmapped | Generic Yosys 2333 cells (`estimates/synth.json`). Not CMOS5L stdcells. SRAM not used (FF imem, 623 seq). |
+| `info.yaml` tiles `6x4` | Yes | `info.yaml` tiles `"6x4"`, top `tt_um_loom_gpe`. |
+| Area ≤ 6×4 | Likely, unmapped | Generic Yosys 2333 cells (`estimates/synth.json`). Not CMOS5L stdcells. SRAM not used (FF imem, 623 seq). |
 | Synth early, then P&R + timing | No | Generic synth only. No liberty, no LibreLane, `timing_50mhz: unknown`. |
 | Open source | License yes, publish no | Apache-2.0. Git remote is still the TT template; not a public Loom repo. |
 | Deadline 2027-01-18 | Time left | ~4 months. |

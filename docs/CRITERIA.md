@@ -7,7 +7,7 @@ Jane Street’s stated use for a protocol emulator is hardware debugging and rev
 ## Already met (sim only)
 
 - Reprogrammable graph ISA (pins, wait, delay, shift, jump, fifo). Protocols are graphs, not blocks.
-- CMOS5L template, `info.yaml` tiles `8x4`, top `tt_um_loom_gpe`.
+- CMOS5L template, `info.yaml` tiles `6x4`, top `tt_um_loom_gpe`.
 - UART / SPI / I2C encode+decode in interpreter, Amaranth, and iverilog.
 - Agent path: TOML graph → compiler → generated Verilog.
 - Open-source license on the template (Apache-2.0).
