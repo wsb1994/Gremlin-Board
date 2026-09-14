@@ -33,7 +33,7 @@ Load a graph onto the chip: `docs/info.md` (two-phase imem write, TX push, run).
 - Open-drain I2C + ACK + stretch: `tests/test_i2c_opendrain.py`
 - Interp ≡ Amaranth RTL for UART/SPI/I2C traces and ISA opcodes
 - Host load sequence tested
-- Generic synth ~2.3k cells (under 8×4 budget). No CMOS5L P&R/GDS in this tree.
+- Generic synth ~2.3k cells (under 6×4 budget). No CMOS5L P&R/GDS in this tree.
 
 ## Layout
 

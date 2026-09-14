@@ -19,7 +19,7 @@ Jane Street’s stated use for a protocol emulator is hardware debugging and rev
 3. Host load that an agent can actually use after reset: write imem + TX FIFO + run without a lab hack. Document the byte protocol in `docs/info.md`.
 4. Prove a fourth protocol with zero RTL change. Add `plans/jtag_tck.toml` or `plans/swd.toml`, round-trip in the same tests. That is the “new protocols after fabrication” clause.
 5. Real I2C, not the hello cartoon: open-drain (OE only, bus pull-up), ACK bit, clock stretch via `wait_pin`. Golden test against a model that NACKs and stretches.
-6. Synthesis on CMOS5L, 8×4. Record mapped cell count vs ~32k budget. Leave margin for CTS/routing. If over, cut SMs/FIFO or move imem to SRAM (TT has IHP SRAM examples).
+6. Synthesis on CMOS5L, 6×4. Record mapped cell count vs ~32k budget. Leave margin for CTS/routing. If over, cut SMs/FIFO or move imem to SRAM (TT has IHP SRAM examples).
 7. Full LibreLane P&R + timing at a declared `clock_hz`. If 50 MHz fails, drop `CLOCK_PERIOD` and the graphs’ cycle budgets together. Gate-level sim of UART TX “Hi” on the netlist.
 8. `docs/info.md` + README: how to load a graph, pinout, what the ISA is not (no UART block).
 9. Submit by 2027-01-18 through their form.
