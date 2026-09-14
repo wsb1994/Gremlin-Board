@@ -7,7 +7,7 @@ Bit layout:
   [15:13] opcode
   [12:8]  delay (extra cycles after the op, 0-31)
   [7:5]   field (dest / condition / push-vs-pull)
-  [4:0]   payload (imm, pin, bitcount, address)
+  [4:0]   payload (imm, pin, address; reserved for IN/OUT, which move one bit)
 """
 
 from __future__ import annotations

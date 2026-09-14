@@ -128,29 +128,26 @@ class SM:
             if ((eff >> pin) & 1) != pol:
                 stall = True
         elif op == OP_OUT:
-            n = payload if payload else 8
-            for _ in range(n):
-                if field == SHIFT_LSB:
-                    bit = self.osr & 1
-                    self.osr = (self.osr >> 1) & 0xFF
-                else:
-                    bit = (self.osr >> 7) & 1
-                    self.osr = (self.osr << 1) & 0xFF
-                p = self.out_pin
-                if bit:
-                    self.out_reg |= 1 << p
-                else:
-                    self.out_reg &= ~(1 << p)
-                self.out_reg &= 0xFF
+            # One bit per instruction on out_pin; payload is reserved (RTL ignores it).
+            if field == SHIFT_LSB:
+                bit = self.osr & 1
+                self.osr = (self.osr >> 1) & 0xFF
+            else:
+                bit = (self.osr >> 7) & 1
+                self.osr = (self.osr << 1) & 0xFF
+            p = self.out_pin
+            if bit:
+                self.out_reg |= 1 << p
+            else:
+                self.out_reg &= ~(1 << p)
+            self.out_reg &= 0xFF
         elif op == OP_IN:
-            n = payload if payload else 8
-            pin = self.in_pin
-            for _ in range(n):
-                sample = (eff >> pin) & 1
-                if field == SHIFT_LSB:
-                    self.isr = ((self.isr >> 1) | (sample << 7)) & 0xFF
-                else:
-                    self.isr = ((self.isr << 1) | sample) & 0xFF
+            # One sample per instruction from in_pin; payload is reserved (RTL ignores it).
+            sample = (eff >> self.in_pin) & 1
+            if field == SHIFT_LSB:
+                self.isr = ((self.isr >> 1) | (sample << 7)) & 0xFF
+            else:
+                self.isr = ((self.isr << 1) | sample) & 0xFF
         elif op == OP_FIFO:
             if field == FIFO_PULL:
                 v = self.tx.pop()

@@ -17,3 +17,7 @@ test/results.xml
 test/gate_level_netlist.v
 test/gen/*.out
 traces/*.txt
+test/gen/*.hex
+test/gen/*.vvp
+test/gen/formal*
+test/gen/tb_isa_exhaustive.v

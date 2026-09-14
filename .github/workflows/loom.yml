@@ -17,3 +17,15 @@ jobs:
         run: |
           python -m loom check
           python -m pytest tests -k 'not verilog'
+  golden-and-formal:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Exhaustive ISA golden (iverilog) + k-induction (yosys sat)
+        # iverilog/yosys come from the LibreLane image the GDS flow uses.
+        run: python -m pytest tests/test_verilog_isa_exhaustive.py tests/test_formal.py

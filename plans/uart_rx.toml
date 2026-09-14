@@ -1,7 +1,12 @@
 name = "uart_rx"
-description = "8N1 decode. Start bit is a wait node; each data bit is sample plus delay."
+description = "8N1 decode. Sync to idle-high, start bit is a wait node; each data bit is sample plus delay, first sample at bit centre."
 protocol = "uart"
 direction = "decode"
+
+[[steps]]
+name = "sync"
+function = "wait_pin"
+inputs = ["0", "1"]
 
 [[steps]]
 name = "wait_start"
@@ -11,7 +16,7 @@ inputs = ["0", "0"]
 [[steps]]
 name = "to_first"
 function = "delay"
-delay = 10
+delay = 9
 
 [[steps]]
 name = "count"

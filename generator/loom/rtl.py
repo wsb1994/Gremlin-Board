@@ -160,6 +160,15 @@ class GraphEngine(Elaboratable):
         for i in range(8):
             m.d.comb += eff[i].eq(Mux(self.gpio_oe[i], self.gpio_out[i], self.gpio_in[i]))
 
+        # Internal state handles for formal harnesses / debug (not ports).
+        self.dbg = dict(
+            x=xs, y=ys, osr=osrs, isr=isrs, delay_ctr=delay_ctrs, out_pin=out_pins,
+            in_pin=in_pins, imem=imems, instr=instrs, tx_mem=tx_mem, rx_mem=rx_mem,
+            tx_r=tx_r, tx_w=tx_w, tx_n=tx_n, rx_r=rx_r, rx_w=rx_w, rx_n=rx_n,
+            do_pull=do_pull, do_push=do_push, eff=eff, pcs=pcs,
+            out_regs=out_regs, oe_regs=oe_regs,
+        )
+
         with m.If(self.run):
             for s in range(n):
                 self._elab_sm(

@@ -3,91 +3,91 @@
     "protocol": "uart",
     "payload": "csv_tick",
     "bytes": 41,
-    "cycles": 3402,
-    "ns": 68040,
-    "Mbps": 4.8207,
-    "kBps": 602.587,
-    "ns_per_byte": 1659.5
+    "cycles": 3401,
+    "ns": 68020,
+    "Mbps": 4.8221,
+    "kBps": 602.764,
+    "ns_per_byte": 1659.0
   },
   {
     "protocol": "uart",
     "payload": "fix_new_order",
     "bytes": 71,
-    "cycles": 5892,
-    "ns": 117840,
-    "Mbps": 4.8201,
-    "kBps": 602.512,
-    "ns_per_byte": 1659.7
+    "cycles": 5891,
+    "ns": 117820,
+    "Mbps": 4.8209,
+    "kBps": 602.614,
+    "ns_per_byte": 1659.4
   },
   {
     "protocol": "uart",
     "payload": "gif_1x1",
     "bytes": 34,
-    "cycles": 2821,
-    "ns": 56420,
-    "Mbps": 4.821,
-    "kBps": 602.623,
-    "ns_per_byte": 1659.4
+    "cycles": 2820,
+    "ns": 56400,
+    "Mbps": 4.8227,
+    "kBps": 602.837,
+    "ns_per_byte": 1658.8
   },
   {
     "protocol": "uart",
     "payload": "hello",
     "bytes": 2,
-    "cycles": 165,
-    "ns": 3300,
-    "Mbps": 4.8485,
-    "kBps": 606.061,
-    "ns_per_byte": 1650.0
+    "cycles": 164,
+    "ns": 3280,
+    "Mbps": 4.878,
+    "kBps": 609.756,
+    "ns_per_byte": 1640.0
   },
   {
     "protocol": "uart",
     "payload": "json_book",
     "bytes": 83,
-    "cycles": 6888,
-    "ns": 137760,
-    "Mbps": 4.82,
-    "kBps": 602.497,
-    "ns_per_byte": 1659.8
+    "cycles": 6887,
+    "ns": 137740,
+    "Mbps": 4.8207,
+    "kBps": 602.585,
+    "ns_per_byte": 1659.5
   },
   {
     "protocol": "uart",
     "payload": "json_fill",
     "bytes": 58,
-    "cycles": 4813,
-    "ns": 96260,
-    "Mbps": 4.8203,
-    "kBps": 602.535,
-    "ns_per_byte": 1659.7
+    "cycles": 4812,
+    "ns": 96240,
+    "Mbps": 4.8213,
+    "kBps": 602.66,
+    "ns_per_byte": 1659.3
   },
   {
     "protocol": "uart",
     "payload": "json_nbbo",
     "bytes": 85,
-    "cycles": 7054,
-    "ns": 141080,
-    "Mbps": 4.82,
-    "kBps": 602.495,
-    "ns_per_byte": 1659.8
+    "cycles": 7053,
+    "ns": 141060,
+    "Mbps": 4.8206,
+    "kBps": 602.58,
+    "ns_per_byte": 1659.5
   },
   {
     "protocol": "uart",
     "payload": "packed_tick",
     "bytes": 24,
-    "cycles": 1991,
-    "ns": 39820,
-    "Mbps": 4.8217,
-    "kBps": 602.712,
-    "ns_per_byte": 1659.2
+    "cycles": 1990,
+    "ns": 39800,
+    "Mbps": 4.8241,
+    "kBps": 603.015,
+    "ns_per_byte": 1658.3
   },
   {
     "protocol": "uart",
     "payload": "png_1x1",
     "bytes": 69,
-    "cycles": 5726,
-    "ns": 114520,
-    "Mbps": 4.8201,
-    "kBps": 602.515,
-    "ns_per_byte": 1659.7
+    "cycles": 5725,
+    "ns": 114500,
+    "Mbps": 4.821,
+    "kBps": 602.62,
+    "ns_per_byte": 1659.4
   },
   {
     "protocol": "spi",

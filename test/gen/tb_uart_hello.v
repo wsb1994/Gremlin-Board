@@ -40,15 +40,16 @@ module tb;
     TXW[8] = 16'h0002;
   end
 
-  reg [15:0] RXW [0:6];
+  reg [15:0] RXW [0:7];
   initial begin
-    RXW[0] = 16'h2000;
-    RXW[1] = 16'hea00;
-    RXW[2] = 16'hc047;
-    RXW[3] = 16'h4601;
-    RXW[4] = 16'h0063;
-    RXW[5] = 16'h8000;
-    RXW[6] = 16'h0000;
+    RXW[0] = 16'h2010;
+    RXW[1] = 16'h2000;
+    RXW[2] = 16'he900;
+    RXW[3] = 16'hc047;
+    RXW[4] = 16'h4601;
+    RXW[5] = 16'h0064;
+    RXW[6] = 16'h8000;
+    RXW[7] = 16'h0001;
   end
 
   reg [7:0] PAY [0:1];
@@ -69,7 +70,7 @@ module tb;
       tx_imem_we = 1; tx_waddr = i[4:0]; tx_wdata = TXW[i];
     end
     @(posedge clk); tx_imem_we = 0;
-    for (i = 0; i < 7; i = i + 1) begin
+    for (i = 0; i < 8; i = i + 1) begin
       @(posedge clk);
       rx_imem_we = 1; rx_waddr = i[4:0]; rx_wdata = RXW[i];
     end

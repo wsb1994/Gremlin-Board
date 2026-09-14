@@ -1,4 +1,4 @@
-"""CLI: emit, check, plans, synth."""
+"""CLI: emit, check, plans, synth, formal."""
 
 from __future__ import annotations
 
@@ -38,6 +38,12 @@ def cmd_synth(_args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_formal(_args: argparse.Namespace) -> int:
+    from loom.formal import main as formal_main
+
+    return formal_main()
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
         prog="loom",
@@ -48,10 +54,15 @@ def main(argv: list[str] | None = None) -> None:
     sub.add_parser("check", help="engine-core criteria")
     sub.add_parser("plans", help="list protocol graphs")
     sub.add_parser("synth", help="generic Yosys area estimate")
+    sub.add_parser("formal", help="k-induction proof of ISA step semantics + FIFO invariants")
     args = parser.parse_args(argv)
-    fn = {"emit": cmd_emit, "check": cmd_check, "plans": cmd_plans, "synth": cmd_synth}[
-        args.cmd
-    ]
+    fn = {
+        "emit": cmd_emit,
+        "check": cmd_check,
+        "plans": cmd_plans,
+        "synth": cmd_synth,
+        "formal": cmd_formal,
+    }[args.cmd]
     sys.exit(fn(args))
 
 

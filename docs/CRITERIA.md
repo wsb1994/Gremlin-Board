@@ -1,5 +1,7 @@
 # Remaining work: contest criteria + infra tests
 
+Status 2026-09-14: items 2, 3, 4, 5, 6, 7, 8, 10, 11 done (see EXECUTIVE-SUMMARY.md). Open: 1 sign-up, 9 submit, 12 FPGA smoke, 13 optional, T1–T8 on real hardware. Tile is 6x4 until the CMOS5L tooling defines 8x4.
+
 Goal of this chip: easiest agent-programmable pin/time engine. Not a Jane Street stack clone. Not a matching-engine NIC.
 
 Jane Street’s stated use for a protocol emulator is hardware debugging and reverse engineering. Trading-infra tests below mean “can this talk to the boxes around a trading system,” not “can this carry the feed.”

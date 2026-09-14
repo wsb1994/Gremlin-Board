@@ -237,9 +237,9 @@ module loom_engine(gpio_in, imem_we, imem_waddr, imem_wdata, tx_we, tx_data, rx_
   reg [15:0] iw8 = 16'h0000;
   (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:69" *)
   reg [15:0] iw9 = 16'h0000;
-  (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:254" *)
+  (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:263" *)
   reg [7:0] mask0;
-  (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:222" *)
+  (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:231" *)
   reg [4:0] next_pc0;
   (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:64" *)
   reg [7:0] osr = 8'h00;
@@ -277,7 +277,7 @@ module loom_engine(gpio_in, imem_we, imem_waddr, imem_wdata, tx_we, tx_data, rx_
   wire rx_re;
   (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:116" *)
   reg [1:0] rx_w = 2'h0;
-  (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:221" *)
+  (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:230" *)
   reg stall0;
   (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:110" *)
   reg [7:0] tx0 = 8'h00;
@@ -320,18 +320,18 @@ module loom_engine(gpio_in, imem_we, imem_waddr, imem_wdata, tx_we, tx_data, rx_
   assign \$8  = gpio_oe[5] ? (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:161" *) gpio_out[5] : gpio_in[5];
   assign \$9  = gpio_oe[6] ? (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:161" *) gpio_out[6] : gpio_in[6];
   assign \$10  = gpio_oe[7] ? (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:161" *) gpio_out[7] : gpio_in[7];
-  assign \$11  = | (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:223" *) delay_ctr;
-  assign \$12  = pc + (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:227" *) 1'h1;
-  assign \$13  = ! (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:234" *) x;
-  assign \$14  = | (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:237" *) x;
-  assign \$15  = | (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:241" *) y;
+  assign \$11  = | (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:232" *) delay_ctr;
+  assign \$12  = pc + (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:236" *) 1'h1;
+  assign \$13  = ! (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:243" *) x;
+  assign \$14  = | (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:246" *) x;
+  assign \$15  = | (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:250" *) y;
   assign \$16  = eff >> in_pin;
   assign \$17  = eff >> instr[3:0];
-  assign \$18  = \$17  != (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:250" *) instr[4];
-  assign \$19  = 1'h1 << (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:255" *) out_pin;
-  assign \$20  = instr[7:5] == (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:268" *) 1'h1;
-  assign \$21  = ! (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:269" *) tx_n;
-  assign \$22  = rx_n == (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:275" *) 3'h4;
+  assign \$18  = \$17  != (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:259" *) instr[4];
+  assign \$19  = 1'h1 << (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:264" *) out_pin;
+  assign \$20  = instr[7:5] == (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:277" *) 1'h1;
+  assign \$21  = ! (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:278" *) tx_n;
+  assign \$22  = rx_n == (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:284" *) 3'h4;
   assign \$23  = ~ (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:101" *) run;
   assign \$24  = imem_we & (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:101" *) \$23 ;
   assign \$25  = tx_w + (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:142" *) 1'h1;
@@ -350,31 +350,31 @@ module loom_engine(gpio_in, imem_we, imem_waddr, imem_wdata, tx_we, tx_data, rx_
   assign \$38  = rx_n - (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:153" *) 1'h1;
   assign \$39  = rx_n + (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:155" *) 1'h1;
   assign \$40  = rx_w + (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:157" *) 1'h1;
-  assign \$41  = | (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:223" *) delay_ctr;
-  assign \$42  = delay_ctr - (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:224" *) 1'h1;
-  assign \$43  = | (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:237" *) x;
-  assign \$44  = x - (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:238" *) 1'h1;
-  assign \$45  = | (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:241" *) y;
-  assign \$46  = y - (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:242" *) 1'h1;
-  assign \$47  = ! (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:253" *) instr[7:5];
-  assign \$48  = \$47  ? (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:253" *) osr[0] : osr[7];
-  assign \$49  = gpio_out | (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:256" *) mask0;
-  assign \$50  = ~ (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:256" *) mask0;
-  assign \$51  = gpio_out & (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:256" *) \$50 ;
-  assign \$52  = \$48  ? (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:256" *) \$49  : \$51 ;
-  assign \$53  = ! (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:257" *) instr[7:5];
-  assign \$56  = ! (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:263" *) instr[7:5];
+  assign \$41  = | (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:232" *) delay_ctr;
+  assign \$42  = delay_ctr - (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:233" *) 1'h1;
+  assign \$43  = | (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:246" *) x;
+  assign \$44  = x - (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:247" *) 1'h1;
+  assign \$45  = | (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:250" *) y;
+  assign \$46  = y - (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:251" *) 1'h1;
+  assign \$47  = ! (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:262" *) instr[7:5];
+  assign \$48  = \$47  ? (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:262" *) osr[0] : osr[7];
+  assign \$49  = gpio_out | (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:265" *) mask0;
+  assign \$50  = ~ (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:265" *) mask0;
+  assign \$51  = gpio_out & (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:265" *) \$50 ;
+  assign \$52  = \$48  ? (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:265" *) \$49  : \$51 ;
+  assign \$53  = ! (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:266" *) instr[7:5];
+  assign \$56  = ! (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:272" *) instr[7:5];
   assign \$57  = eff >> in_pin;
   assign \$58  = eff >> in_pin;
-  assign \$59  = instr[7:5] == (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:268" *) 1'h1;
-  assign \$60  = ! (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:269" *) tx_n;
-  assign \$62  = rx_n == (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:275" *) 3'h4;
-  assign \$63  = 1'h1 << (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:291" *) instr[2:0];
-  assign \$64  = gpio_out | (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:291" *) \$63 ;
-  assign \$65  = 1'h1 << (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:293" *) instr[2:0];
-  assign \$66  = ~ (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:293" *) \$65 ;
-  assign \$67  = gpio_out & (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:293" *) \$66 ;
-  assign \$68  = ~ (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:300" *) stall0;
+  assign \$59  = instr[7:5] == (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:277" *) 1'h1;
+  assign \$60  = ! (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:278" *) tx_n;
+  assign \$62  = rx_n == (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:284" *) 3'h4;
+  assign \$63  = 1'h1 << (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:300" *) instr[2:0];
+  assign \$64  = gpio_out | (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:300" *) \$63 ;
+  assign \$65  = 1'h1 << (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:302" *) instr[2:0];
+  assign \$66  = ~ (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:302" *) \$65 ;
+  assign \$67  = gpio_out & (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:302" *) \$66 ;
+  assign \$68  = ~ (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:309" *) stall0;
   (* src = "/home/wsb/Documents/Binaries/jane_street/generator/loom/rtl.py:69" *)
   always @(posedge clk)
     iw0 <= \$69 ;
