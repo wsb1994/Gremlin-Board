@@ -1,0 +1,48 @@
+name = "i2c_rx"
+description = "Decode 8 bits between start and stop. SDA=pin0, SCL=pin1."
+protocol = "i2c"
+direction = "decode"
+
+[[steps]]
+name = "wait_idle"
+function = "wait_pin"
+inputs = ["0", "1"]
+
+[[steps]]
+name = "wait_sda_lo"
+function = "wait_pin"
+inputs = ["0", "0"]
+
+[[steps]]
+name = "count"
+function = "set_x"
+inputs = ["7"]
+
+[[steps]]
+name = "wait_scl_hi"
+function = "wait_pin"
+inputs = ["1", "1"]
+
+[[steps]]
+name = "sample"
+function = "in_msb"
+inputs = ["1"]
+
+[[steps]]
+name = "wait_scl_lo"
+function = "wait_pin"
+inputs = ["1", "0"]
+
+[[steps]]
+name = "next"
+function = "jmp_x_dec"
+inputs = ["wait_scl_hi"]
+
+[[steps]]
+name = "store"
+function = "push"
+
+[[steps]]
+name = "again"
+function = "jmp"
+inputs = ["wait_idle"]

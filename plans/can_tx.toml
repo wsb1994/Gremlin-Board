@@ -1,0 +1,51 @@
+name = "can_tx"
+description = "CAN bit-layer subset: idle recessive 1, SOF 0, 8 data bits LSB, IFS 1. No bit stuffing/CRC."
+protocol = "can"
+direction = "encode"
+
+[[steps]]
+name = "idle"
+function = "set_pins"
+inputs = ["1"]
+
+[[steps]]
+name = "drive"
+function = "set_pindirs"
+inputs = ["1"]
+
+[[steps]]
+name = "pull_byte"
+function = "pull"
+
+[[steps]]
+name = "count"
+function = "set_x"
+inputs = ["7"]
+
+[[steps]]
+name = "sof"
+function = "set_pins"
+inputs = ["0"]
+delay = 7
+
+[[steps]]
+name = "bit"
+function = "out_lsb"
+inputs = ["1"]
+delay = 6
+
+[[steps]]
+name = "next_bit"
+function = "jmp_x_dec"
+inputs = ["bit"]
+
+[[steps]]
+name = "ifs"
+function = "set_pins"
+inputs = ["1"]
+delay = 7
+
+[[steps]]
+name = "again"
+function = "jmp"
+inputs = ["pull_byte"]

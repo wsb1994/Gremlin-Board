@@ -1,0 +1,80 @@
+name = "i2c_tx"
+description = "Master encode, MSB first. SDA=pin0, SCL=pin1. Push-pull hello-world model."
+protocol = "i2c"
+direction = "encode"
+
+[[steps]]
+name = "idle"
+function = "set_pins"
+inputs = ["3"]
+
+[[steps]]
+name = "drive"
+function = "set_pindirs"
+inputs = ["3"]
+
+[[steps]]
+name = "pull_byte"
+function = "pull"
+
+[[steps]]
+name = "count"
+function = "set_x"
+inputs = ["7"]
+
+[[steps]]
+name = "start_sda"
+function = "clr_bit"
+inputs = ["0"]
+
+[[steps]]
+name = "start_scl"
+function = "clr_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "scl_lo"
+function = "clr_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "data"
+function = "out_msb"
+inputs = ["1"]
+
+[[steps]]
+name = "scl_hi"
+function = "set_bit"
+inputs = ["1"]
+delay = 1
+
+[[steps]]
+name = "next_bit"
+function = "jmp_x_dec"
+inputs = ["scl_lo"]
+
+[[steps]]
+name = "pre_stop_scl"
+function = "clr_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "stop_sda_lo"
+function = "clr_bit"
+inputs = ["0"]
+
+[[steps]]
+name = "stop_scl"
+function = "set_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "stop_sda"
+function = "set_bit"
+inputs = ["0"]
+delay = 2
+
+[[steps]]
+name = "again"
+function = "jmp"
+inputs = ["pull_byte"]

@@ -1,0 +1,272 @@
+[
+  {
+    "protocol": "uart",
+    "payload": "csv_tick",
+    "bytes": 41,
+    "cycles": 3402,
+    "ns": 68040,
+    "Mbps": 4.8207,
+    "kBps": 602.587,
+    "ns_per_byte": 1659.5
+  },
+  {
+    "protocol": "uart",
+    "payload": "fix_new_order",
+    "bytes": 71,
+    "cycles": 5892,
+    "ns": 117840,
+    "Mbps": 4.8201,
+    "kBps": 602.512,
+    "ns_per_byte": 1659.7
+  },
+  {
+    "protocol": "uart",
+    "payload": "gif_1x1",
+    "bytes": 34,
+    "cycles": 2821,
+    "ns": 56420,
+    "Mbps": 4.821,
+    "kBps": 602.623,
+    "ns_per_byte": 1659.4
+  },
+  {
+    "protocol": "uart",
+    "payload": "hello",
+    "bytes": 2,
+    "cycles": 165,
+    "ns": 3300,
+    "Mbps": 4.8485,
+    "kBps": 606.061,
+    "ns_per_byte": 1650.0
+  },
+  {
+    "protocol": "uart",
+    "payload": "json_book",
+    "bytes": 83,
+    "cycles": 6888,
+    "ns": 137760,
+    "Mbps": 4.82,
+    "kBps": 602.497,
+    "ns_per_byte": 1659.8
+  },
+  {
+    "protocol": "uart",
+    "payload": "json_fill",
+    "bytes": 58,
+    "cycles": 4813,
+    "ns": 96260,
+    "Mbps": 4.8203,
+    "kBps": 602.535,
+    "ns_per_byte": 1659.7
+  },
+  {
+    "protocol": "uart",
+    "payload": "json_nbbo",
+    "bytes": 85,
+    "cycles": 7054,
+    "ns": 141080,
+    "Mbps": 4.82,
+    "kBps": 602.495,
+    "ns_per_byte": 1659.8
+  },
+  {
+    "protocol": "uart",
+    "payload": "packed_tick",
+    "bytes": 24,
+    "cycles": 1991,
+    "ns": 39820,
+    "Mbps": 4.8217,
+    "kBps": 602.712,
+    "ns_per_byte": 1659.2
+  },
+  {
+    "protocol": "uart",
+    "payload": "png_1x1",
+    "bytes": 69,
+    "cycles": 5726,
+    "ns": 114520,
+    "Mbps": 4.8201,
+    "kBps": 602.515,
+    "ns_per_byte": 1659.7
+  },
+  {
+    "protocol": "spi",
+    "payload": "csv_tick",
+    "bytes": 41,
+    "cycles": 1438,
+    "ns": 28760,
+    "Mbps": 11.4047,
+    "kBps": 1425.591,
+    "ns_per_byte": 701.5
+  },
+  {
+    "protocol": "spi",
+    "payload": "fix_new_order",
+    "bytes": 71,
+    "cycles": 2488,
+    "ns": 49760,
+    "Mbps": 11.4148,
+    "kBps": 1426.849,
+    "ns_per_byte": 700.8
+  },
+  {
+    "protocol": "spi",
+    "payload": "gif_1x1",
+    "bytes": 34,
+    "cycles": 1193,
+    "ns": 23860,
+    "Mbps": 11.3998,
+    "kBps": 1424.979,
+    "ns_per_byte": 701.8
+  },
+  {
+    "protocol": "spi",
+    "payload": "hello",
+    "bytes": 2,
+    "cycles": 73,
+    "ns": 1460,
+    "Mbps": 10.9589,
+    "kBps": 1369.863,
+    "ns_per_byte": 730.0
+  },
+  {
+    "protocol": "spi",
+    "payload": "json_book",
+    "bytes": 83,
+    "cycles": 2908,
+    "ns": 58160,
+    "Mbps": 11.4168,
+    "kBps": 1427.098,
+    "ns_per_byte": 700.7
+  },
+  {
+    "protocol": "spi",
+    "payload": "json_fill",
+    "bytes": 58,
+    "cycles": 2033,
+    "ns": 40660,
+    "Mbps": 11.4117,
+    "kBps": 1426.463,
+    "ns_per_byte": 701.0
+  },
+  {
+    "protocol": "spi",
+    "payload": "json_nbbo",
+    "bytes": 85,
+    "cycles": 2978,
+    "ns": 59560,
+    "Mbps": 11.4171,
+    "kBps": 1427.132,
+    "ns_per_byte": 700.7
+  },
+  {
+    "protocol": "spi",
+    "payload": "packed_tick",
+    "bytes": 24,
+    "cycles": 843,
+    "ns": 16860,
+    "Mbps": 11.3879,
+    "kBps": 1423.488,
+    "ns_per_byte": 702.5
+  },
+  {
+    "protocol": "spi",
+    "payload": "png_1x1",
+    "bytes": 69,
+    "cycles": 2418,
+    "ns": 48360,
+    "Mbps": 11.4144,
+    "kBps": 1426.799,
+    "ns_per_byte": 700.9
+  },
+  {
+    "protocol": "i2c",
+    "payload": "csv_tick",
+    "bytes": 41,
+    "cycles": 2089,
+    "ns": 41780,
+    "Mbps": 7.8506,
+    "kBps": 981.331,
+    "ns_per_byte": 1019.0
+  },
+  {
+    "protocol": "i2c",
+    "payload": "fix_new_order",
+    "bytes": 71,
+    "cycles": 3619,
+    "ns": 72380,
+    "Mbps": 7.8475,
+    "kBps": 980.934,
+    "ns_per_byte": 1019.4
+  },
+  {
+    "protocol": "i2c",
+    "payload": "gif_1x1",
+    "bytes": 34,
+    "cycles": 1732,
+    "ns": 34640,
+    "Mbps": 7.8522,
+    "kBps": 981.524,
+    "ns_per_byte": 1018.8
+  },
+  {
+    "protocol": "i2c",
+    "payload": "hello",
+    "bytes": 2,
+    "cycles": 100,
+    "ns": 2000,
+    "Mbps": 8.0,
+    "kBps": 1000.0,
+    "ns_per_byte": 1000.0
+  },
+  {
+    "protocol": "i2c",
+    "payload": "json_book",
+    "bytes": 83,
+    "cycles": 4231,
+    "ns": 84620,
+    "Mbps": 7.8468,
+    "kBps": 980.856,
+    "ns_per_byte": 1019.5
+  },
+  {
+    "protocol": "i2c",
+    "payload": "json_fill",
+    "bytes": 58,
+    "cycles": 2956,
+    "ns": 59120,
+    "Mbps": 7.8484,
+    "kBps": 981.055,
+    "ns_per_byte": 1019.3
+  },
+  {
+    "protocol": "i2c",
+    "payload": "json_nbbo",
+    "bytes": 85,
+    "cycles": 4333,
+    "ns": 86660,
+    "Mbps": 7.8468,
+    "kBps": 980.845,
+    "ns_per_byte": 1019.5
+  },
+  {
+    "protocol": "i2c",
+    "payload": "packed_tick",
+    "bytes": 24,
+    "cycles": 1222,
+    "ns": 24440,
+    "Mbps": 7.856,
+    "kBps": 981.997,
+    "ns_per_byte": 1018.3
+  },
+  {
+    "protocol": "i2c",
+    "payload": "png_1x1",
+    "bytes": 69,
+    "cycles": 3517,
+    "ns": 70340,
+    "Mbps": 7.8476,
+    "kBps": 980.95,
+    "ns_per_byte": 1019.4
+  }
+]

@@ -1,0 +1,47 @@
+{
+  "top": "tt_um_loom_gpe",
+  "sources": [
+    "src/project.v",
+    "src/loom_engine.v"
+  ],
+  "tiles": "8x4",
+  "tile_count": 32,
+  "cell_budget": 32000,
+  "cell_margin": 24000,
+  "clock_period_ns": 20,
+  "clock_hz_target": 50000000,
+  "yosys_version": "0.36+42 (git sha1 70d35314d, clang 11.0.1-2 -fPIC -Os)",
+  "yosys_command": "docker run --rm -v /home/wsb/Documents/Binaries/jane_street:/work -w /work hdlc/yosys yosys -p <script>",
+  "yosys_script": "read_verilog -sv src/project.v\nread_verilog src/loom_engine.v\nhierarchy -check -top tt_um_loom_gpe\nsynth -top tt_um_loom_gpe -flatten\nstat\nstat -tech cmos\nstat -json",
+  "mapping": "generic Yosys synth -flatten (not CMOS5L standard cells)",
+  "num_cells": 2333,
+  "num_sequential": 623,
+  "num_combo": 1710,
+  "cells_by_type": {
+    "$_ANDNOT_": 728,
+    "$_AND_": 10,
+    "$_MUX_": 138,
+    "$_NAND_": 37,
+    "$_NOR_": 29,
+    "$_NOT_": 48,
+    "$_ORNOT_": 42,
+    "$_OR_": 649,
+    "$_SDFFE_PN0P_": 620,
+    "$_SDFFE_PP0P_": 1,
+    "$_SDFF_PN0_": 2,
+    "$_XNOR_": 6,
+    "$_XOR_": 23
+  },
+  "cmos_transistor_estimate": 10938,
+  "cmos_transistor_estimate_incomplete": true,
+  "nand2_eq_combo": 2734.5,
+  "nand2_eq_note": "Yosys stat -tech cmos transistors/4 for combinational gates; the trailing + means sequential cells are not in that transistor count",
+  "under_24k_margin": true,
+  "timing_50mhz": "unknown",
+  "gds": false,
+  "blockers": [
+    "LibreLane/OpenLane not on PATH",
+    "PDK_ROOT/PDK unset; IHP sg13cmos5l liberty not present",
+    "CMOS5L P&R/STA/GDS not run (not faked)"
+  ]
+}

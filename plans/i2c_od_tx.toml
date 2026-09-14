@@ -1,0 +1,143 @@
+name = "i2c_od_tx"
+description = "Open-drain master write. SDA=pin0 SCL=pin1. Drive 0 via OE, ACK slot, stretch wait."
+protocol = "i2c"
+direction = "encode"
+
+# gpio_out stays 0 on SDA/SCL. Drive 0 = OE 1; release = OE 0 (pull-up).
+# Pin 2 is a scratch bit so jmp_pin can branch on the OSR MSB without driving SDA high.
+
+[[steps]]
+name = "idle_out"
+function = "set_pins"
+inputs = ["0"]
+
+[[steps]]
+name = "idle_oe"
+function = "set_pindirs"
+inputs = ["0"]
+
+[[steps]]
+name = "sel_out"
+function = "set_outpin"
+inputs = ["2"]
+
+[[steps]]
+name = "sel_in"
+function = "set_inpin"
+inputs = ["2"]
+
+[[steps]]
+name = "nbytes"
+function = "set_y"
+inputs = ["1"]
+
+[[steps]]
+name = "start_sda"
+function = "set_pindirs"
+inputs = ["1"]
+
+[[steps]]
+name = "start_scl"
+function = "set_pindirs"
+inputs = ["3"]
+
+[[steps]]
+name = "pull_byte"
+function = "pull"
+
+[[steps]]
+name = "count"
+function = "set_x"
+inputs = ["7"]
+
+[[steps]]
+name = "bit_prep"
+function = "set_pindirs"
+inputs = ["6"]
+
+[[steps]]
+name = "data"
+function = "out_msb"
+inputs = ["1"]
+
+[[steps]]
+name = "is_one"
+function = "jmp_pin"
+inputs = ["bit_one"]
+
+[[steps]]
+name = "bit_zero"
+function = "set_pindirs"
+inputs = ["7"]
+
+[[steps]]
+name = "bit_zero_clk"
+function = "set_pindirs"
+inputs = ["5"]
+
+[[steps]]
+name = "to_wait"
+function = "jmp"
+inputs = ["wait_scl"]
+
+[[steps]]
+name = "bit_one"
+function = "set_pindirs"
+inputs = ["4"]
+
+[[steps]]
+name = "wait_scl"
+function = "wait_pin"
+inputs = ["1", "1"]
+delay = 1
+
+[[steps]]
+name = "next_bit"
+function = "jmp_x_dec"
+inputs = ["bit_prep"]
+
+[[steps]]
+name = "ack_prep"
+function = "set_pindirs"
+inputs = ["6"]
+
+[[steps]]
+name = "ack_clk"
+function = "set_pindirs"
+inputs = ["4"]
+
+[[steps]]
+name = "ack_wait"
+function = "wait_pin"
+inputs = ["1", "1"]
+delay = 1
+
+[[steps]]
+name = "ack_done"
+function = "set_pindirs"
+inputs = ["6"]
+
+[[steps]]
+name = "next_byte"
+function = "jmp_y_dec"
+inputs = ["pull_byte"]
+
+[[steps]]
+name = "stop_sda"
+function = "set_pindirs"
+inputs = ["3"]
+
+[[steps]]
+name = "stop_scl"
+function = "set_pindirs"
+inputs = ["1"]
+
+[[steps]]
+name = "stop"
+function = "set_pindirs"
+inputs = ["0"]
+
+[[steps]]
+name = "done"
+function = "jmp"
+inputs = ["done"]

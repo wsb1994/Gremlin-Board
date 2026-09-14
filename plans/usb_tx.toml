@@ -1,0 +1,51 @@
+name = "usb_tx"
+description = "USB LS bit-layer subset: D+=pin0 8N1, D-=pin1 inverted idle. Not NRZI/packet."
+protocol = "usb"
+direction = "encode"
+
+[[steps]]
+name = "idle"
+function = "set_pins"
+inputs = ["1"]
+
+[[steps]]
+name = "drive"
+function = "set_pindirs"
+inputs = ["3"]
+
+[[steps]]
+name = "pull_byte"
+function = "pull"
+
+[[steps]]
+name = "count"
+function = "set_x"
+inputs = ["7"]
+
+[[steps]]
+name = "start"
+function = "set_pins"
+inputs = ["2"]
+delay = 7
+
+[[steps]]
+name = "bit"
+function = "out_lsb"
+inputs = ["1"]
+delay = 6
+
+[[steps]]
+name = "next_bit"
+function = "jmp_x_dec"
+inputs = ["bit"]
+
+[[steps]]
+name = "stop"
+function = "set_pins"
+inputs = ["1"]
+delay = 7
+
+[[steps]]
+name = "again"
+function = "jmp"
+inputs = ["pull_byte"]

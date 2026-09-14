@@ -1,0 +1,53 @@
+name = "jtag_shift"
+description = "Clock TCK, TMS=0, capture TDO MSB-first. Device model supplies TDO."
+protocol = "jtag"
+direction = "decode"
+
+[[steps]]
+name = "wait_tck_hi"
+function = "wait_pin"
+inputs = ["1", "1"]
+
+[[steps]]
+name = "sample"
+function = "in_msb"
+inputs = ["1"]
+
+[[steps]]
+name = "wait_tck_lo"
+function = "wait_pin"
+inputs = ["1", "0"]
+
+[[steps]]
+name = "count"
+function = "set_x"
+inputs = ["6"]
+
+[[steps]]
+name = "wait_hi2"
+function = "wait_pin"
+inputs = ["1", "1"]
+
+[[steps]]
+name = "sample2"
+function = "in_msb"
+inputs = ["1"]
+
+[[steps]]
+name = "wait_lo2"
+function = "wait_pin"
+inputs = ["1", "0"]
+
+[[steps]]
+name = "next"
+function = "jmp_x_dec"
+inputs = ["wait_hi2"]
+
+[[steps]]
+name = "store"
+function = "push"
+
+[[steps]]
+name = "again"
+function = "jmp"
+inputs = ["wait_tck_hi"]

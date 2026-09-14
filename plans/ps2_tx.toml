@@ -1,0 +1,50 @@
+name = "ps2_tx"
+description = "PS/2 host clocked byte. DATA=pin0 CLK=pin1, LSB first, idle high."
+protocol = "ps2"
+direction = "encode"
+
+[[steps]]
+name = "idle"
+function = "set_pins"
+inputs = ["3"]
+
+[[steps]]
+name = "drive"
+function = "set_pindirs"
+inputs = ["3"]
+
+[[steps]]
+name = "pull_byte"
+function = "pull"
+
+[[steps]]
+name = "count"
+function = "set_x"
+inputs = ["7"]
+
+[[steps]]
+name = "data"
+function = "out_lsb"
+inputs = ["1"]
+delay = 1
+
+[[steps]]
+name = "clk_lo"
+function = "clr_bit"
+inputs = ["1"]
+delay = 1
+
+[[steps]]
+name = "clk_hi"
+function = "set_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "next_bit"
+function = "jmp_x_dec"
+inputs = ["data"]
+
+[[steps]]
+name = "again"
+function = "jmp"
+inputs = ["pull_byte"]

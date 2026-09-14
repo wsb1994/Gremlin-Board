@@ -1,0 +1,48 @@
+name = "eth_tx"
+description = "Ethernet bit-layer subset: MII-like clock+data, MOSI=pin0 CLK=pin1. Not 10BASE-T magnetics."
+protocol = "ethernet"
+direction = "encode"
+
+[[steps]]
+name = "idle"
+function = "set_pins"
+inputs = ["0"]
+
+[[steps]]
+name = "drive"
+function = "set_pindirs"
+inputs = ["3"]
+
+[[steps]]
+name = "pull_byte"
+function = "pull"
+
+[[steps]]
+name = "count"
+function = "set_x"
+inputs = ["7"]
+
+[[steps]]
+name = "data"
+function = "out_msb"
+inputs = ["1"]
+
+[[steps]]
+name = "clk_hi"
+function = "set_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "clk_lo"
+function = "clr_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "next_bit"
+function = "jmp_x_dec"
+inputs = ["data"]
+
+[[steps]]
+name = "again"
+function = "jmp"
+inputs = ["pull_byte"]

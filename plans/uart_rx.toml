@@ -1,0 +1,39 @@
+name = "uart_rx"
+description = "8N1 decode. Start bit is a wait node; each data bit is sample plus delay."
+protocol = "uart"
+direction = "decode"
+
+[[steps]]
+name = "wait_start"
+function = "wait_pin"
+inputs = ["0", "0"]
+
+[[steps]]
+name = "to_first"
+function = "delay"
+delay = 10
+
+[[steps]]
+name = "count"
+function = "set_x"
+inputs = ["7"]
+
+[[steps]]
+name = "sample"
+function = "in_lsb"
+inputs = ["1"]
+delay = 6
+
+[[steps]]
+name = "next_bit"
+function = "jmp_x_dec"
+inputs = ["sample"]
+
+[[steps]]
+name = "store"
+function = "push"
+
+[[steps]]
+name = "again"
+function = "jmp"
+inputs = ["wait_start"]

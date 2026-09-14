@@ -1,0 +1,40 @@
+name = "jtag_tck"
+description = "Drive TCK on pin1, hold TMS/TDI 0. Companion to jtag_shift."
+protocol = "jtag"
+direction = "encode"
+
+[[steps]]
+name = "idle"
+function = "set_pins"
+inputs = ["0"]
+
+[[steps]]
+name = "drive"
+function = "set_pindirs"
+inputs = ["3"]
+
+[[steps]]
+name = "count"
+function = "set_x"
+inputs = ["7"]
+
+[[steps]]
+name = "tck_lo"
+function = "clr_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "tck_hi"
+function = "set_bit"
+inputs = ["1"]
+delay = 1
+
+[[steps]]
+name = "next"
+function = "jmp_x_dec"
+inputs = ["tck_lo"]
+
+[[steps]]
+name = "again"
+function = "jmp"
+inputs = ["count"]

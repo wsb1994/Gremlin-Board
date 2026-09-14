@@ -1,3 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
 .DS_Store
 .idea
 *.vcd
@@ -8,6 +13,7 @@ tt_submission
 src/user_config.json
 src/config_merged.json
 test/sim_build
-test/__pycache__/
 test/results.xml
 test/gate_level_netlist.v
+test/gen/*.out
+traces/*.txt

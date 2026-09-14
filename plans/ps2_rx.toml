@@ -1,0 +1,58 @@
+name = "ps2_rx"
+description = "Wait CLK idle high, then sample DATA on falling edges, LSB first."
+protocol = "ps2"
+direction = "decode"
+
+[[steps]]
+name = "wait_idle"
+function = "wait_pin"
+inputs = ["1", "1"]
+
+[[steps]]
+name = "wait_fall"
+function = "wait_pin"
+inputs = ["1", "0"]
+
+[[steps]]
+name = "sample"
+function = "in_lsb"
+inputs = ["1"]
+
+[[steps]]
+name = "wait_rise"
+function = "wait_pin"
+inputs = ["1", "1"]
+
+[[steps]]
+name = "count_init"
+function = "set_x"
+inputs = ["6"]
+
+[[steps]]
+name = "wait_fall2"
+function = "wait_pin"
+inputs = ["1", "0"]
+
+[[steps]]
+name = "sample2"
+function = "in_lsb"
+inputs = ["1"]
+
+[[steps]]
+name = "wait_rise2"
+function = "wait_pin"
+inputs = ["1", "1"]
+
+[[steps]]
+name = "next"
+function = "jmp_x_dec"
+inputs = ["wait_fall2"]
+
+[[steps]]
+name = "store"
+function = "push"
+
+[[steps]]
+name = "again"
+function = "jmp"
+inputs = ["wait_idle"]

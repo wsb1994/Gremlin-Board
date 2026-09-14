@@ -1,0 +1,53 @@
+name = "eth_rx"
+description = "Ethernet bit-layer subset: sample data on MII-like clock rising. Not 10BASE-T magnetics."
+protocol = "ethernet"
+direction = "decode"
+
+[[steps]]
+name = "wait_rise"
+function = "wait_pin"
+inputs = ["1", "1"]
+
+[[steps]]
+name = "sample"
+function = "in_msb"
+inputs = ["1"]
+
+[[steps]]
+name = "wait_fall"
+function = "wait_pin"
+inputs = ["1", "0"]
+
+[[steps]]
+name = "count_init"
+function = "set_x"
+inputs = ["6"]
+
+[[steps]]
+name = "wait_rise2"
+function = "wait_pin"
+inputs = ["1", "1"]
+
+[[steps]]
+name = "sample2"
+function = "in_msb"
+inputs = ["1"]
+
+[[steps]]
+name = "wait_fall2"
+function = "wait_pin"
+inputs = ["1", "0"]
+
+[[steps]]
+name = "next"
+function = "jmp_x_dec"
+inputs = ["wait_rise2"]
+
+[[steps]]
+name = "store"
+function = "push"
+
+[[steps]]
+name = "again"
+function = "jmp"
+inputs = ["wait_rise"]

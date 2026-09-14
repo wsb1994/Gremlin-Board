@@ -1,0 +1,48 @@
+name = "jtag_tx"
+description = "Bit-bang TDI=pin0 TCK=pin1, MSB first. Same pin dance as a TAP shift."
+protocol = "jtag"
+direction = "encode"
+
+[[steps]]
+name = "idle"
+function = "set_pins"
+inputs = ["0"]
+
+[[steps]]
+name = "drive"
+function = "set_pindirs"
+inputs = ["3"]
+
+[[steps]]
+name = "pull_byte"
+function = "pull"
+
+[[steps]]
+name = "count"
+function = "set_x"
+inputs = ["7"]
+
+[[steps]]
+name = "data"
+function = "out_msb"
+inputs = ["1"]
+
+[[steps]]
+name = "tck_hi"
+function = "set_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "tck_lo"
+function = "clr_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "next_bit"
+function = "jmp_x_dec"
+inputs = ["data"]
+
+[[steps]]
+name = "again"
+function = "jmp"
+inputs = ["pull_byte"]

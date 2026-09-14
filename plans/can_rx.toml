@@ -1,0 +1,39 @@
+name = "can_rx"
+description = "CAN bit-layer subset: wait SOF dominant, sample 8 LSB bits. No bit stuffing/CRC."
+protocol = "can"
+direction = "decode"
+
+[[steps]]
+name = "wait_sof"
+function = "wait_pin"
+inputs = ["0", "0"]
+
+[[steps]]
+name = "to_first"
+function = "delay"
+delay = 10
+
+[[steps]]
+name = "count"
+function = "set_x"
+inputs = ["7"]
+
+[[steps]]
+name = "sample"
+function = "in_lsb"
+inputs = ["1"]
+delay = 6
+
+[[steps]]
+name = "next_bit"
+function = "jmp_x_dec"
+inputs = ["sample"]
+
+[[steps]]
+name = "store"
+function = "push"
+
+[[steps]]
+name = "again"
+function = "jmp"
+inputs = ["wait_sof"]
