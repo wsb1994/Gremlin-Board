@@ -253,6 +253,8 @@ class GraphEngine(Elaboratable):
                         with m.Case(JMP_PIN):
                             with m.If(eff.bit_select(in_pin, 1)):
                                 m.d.comb += next_pc.eq(payload)
+                        with m.Default():
+                            pass
                 with m.Case(OP_WAIT):
                     pin = payload[0:4]
                     pol = payload[4]
@@ -304,7 +306,9 @@ class GraphEngine(Elaboratable):
                             m.d.sync += out_pin.eq(payload[0:3])
                         with m.Case(SET_INPIN):
                             m.d.sync += in_pin.eq(payload[0:3])
-                with m.Case(OP_NOP):
+                        with m.Default():
+                            pass
+                with m.Default():  # OP_NOP
                     pass
             with m.If(~stall):
                 m.d.sync += [
