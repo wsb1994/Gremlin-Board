@@ -2,7 +2,7 @@
 
 Agent-programmable pin/time engine for the Jane Street protocol-emulator ASIC contest (Tiny Tapeout CMOS5L, 6×4 tiles).
 
-Protocols are graphs in `plans/`. The silicon is one ISA: pin, wait, delay, shift, fifo, jump. Load a new graph after tapeout; do not resynth.
+Protocols are graphs in `plans/`. The silicon is one ISA: pin, wait, delay, shift, fifo, jump, mov. Four graph slots and two state machines on the die. Load a new graph after tapeout; do not resynth.
 
 This is a contest tapeout candidate, not a trading NIC. USB/Ethernet/CAN graphs are bit-layer subsets (see plan descriptions). 50 MHz closes on CMOS5L (LibreLane, slow corner setup slack +9.0 ns).
 

@@ -1,0 +1,55 @@
+name = "uart_8n1_tx"
+description = "Production 8N1 TX. 8 SM-cycles/bit; baud is the SM clock divider. Idle high, LSB first."
+protocol = "uart"
+direction = "encode"
+sideset_count = 0
+wrap_bottom = 2
+wrap_top = 8
+
+[[steps]]
+name = "idle"
+function = "set_pins"
+inputs = ["1"]
+
+[[steps]]
+name = "drive"
+function = "set_pindirs"
+inputs = ["1"]
+
+[[steps]]
+name = "pull_byte"
+function = "pull"
+
+[[steps]]
+name = "count"
+function = "set_x"
+inputs = ["7"]
+
+[[steps]]
+name = "start"
+function = "set_pins"
+inputs = ["0"]
+delay = 7
+
+[[steps]]
+name = "bit"
+function = "out_lsb"
+inputs = ["1"]
+delay = 6
+
+[[steps]]
+name = "next_bit"
+function = "jmp_x_dec"
+inputs = ["bit"]
+
+[[steps]]
+name = "stop"
+function = "set_pins"
+inputs = ["1"]
+delay = 7
+
+# wrap_top is this instruction: wrap back to pull_byte (index 2) with no JMP
+[[steps]]
+name = "again"
+function = "delay"
+delay = 0

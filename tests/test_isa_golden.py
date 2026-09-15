@@ -13,6 +13,7 @@ from loom.isa import (
     JMP_X_DEC,
     JMP_X_EQ0,
     JMP_Y_DEC,
+    JMP_Y_EQ0,
     OP_FIFO,
     OP_IN,
     OP_JMP,
@@ -266,7 +267,13 @@ CASES = [
         3,
         0b00000100,
     ),
-    _case("mov_nop", [encode(OP_MOV, field=REG_X, payload=REG_OSR), encode(OP_SET, field=SET_X, payload=4)], 3),
+    _case("mov_x_from_osr", [encode(OP_FIFO, field=FIFO_PULL), encode(OP_MOV, field=REG_X, payload=REG_OSR)], 3, tx=(0xA5,)),
+    _case("jmp_y_eq0_taken", [encode(OP_JMP, field=JMP_Y_EQ0, payload=0)], 3),
+    _case(
+        "jmp_y_eq0_not",
+        [encode(OP_SET, field=SET_Y, payload=1), encode(OP_JMP, field=JMP_Y_EQ0, payload=0)],
+        2,
+    ),
     _case(
         "set_delay_then_nop",
         [encode(OP_SET, delay=3, field=SET_Y, payload=11), encode(OP_SET, field=SET_X, payload=1)],

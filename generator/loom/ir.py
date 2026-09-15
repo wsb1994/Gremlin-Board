@@ -71,6 +71,7 @@ PRIMITIVES: dict[str, Primitive] = {
         Primitive("jmp_x_dec", "If X!=0: X--, jump", control=True),
         Primitive("jmp_y_dec", "If Y!=0: Y--, jump", control=True),
         Primitive("jmp_x_eq0", "Jump if X==0", control=True),
+        Primitive("jmp_y_eq0", "Jump if Y==0", control=True),
         Primitive("jmp_pin", "Jump if pin high", control=True),
     )
 }
@@ -82,6 +83,7 @@ class Step:
     function: str
     inputs: list[StepInput] = field(default_factory=list)
     delay: int = 0
+    sideset: int | None = None
     timeout: int | None = None
 
 
@@ -92,6 +94,9 @@ class Plan:
     description: str = ""
     protocol: str = ""
     direction: str = ""  # encode | decode | both
+    sideset_count: int = 0  # 0 = delay is 5 bits; 1 = delay 4 bits + 1 sideset bit
+    wrap_bottom: int = 0
+    wrap_top: int = 31
 
     def step_names(self) -> set[str]:
         return {s.name for s in self.steps}
@@ -118,7 +123,13 @@ class Plan:
                     )
             if s.delay < 0:
                 raise LoomError(f"{self.name}.{s.name}: negative delay")
+            if s.sideset is not None and s.sideset not in (0, 1):
+                raise LoomError(f"{self.name}.{s.name}: sideset must be 0 or 1")
             _ = prim
+        if self.sideset_count not in (0, 1):
+            raise LoomError(f"{self.name}: sideset_count must be 0 or 1")
+        if not 0 <= self.wrap_bottom < 32 or not 0 <= self.wrap_top < 32:
+            raise LoomError(f"{self.name}: wrap bounds must be 0..31")
 
         # Data-edge cycle detection (goblin analog). Control edges ignored.
         data_adj: dict[str, list[str]] = {n: [] for n in known}
@@ -168,6 +179,7 @@ class Plan:
                     function=fn,
                     inputs=inputs,
                     delay=int(s.get("delay", 0)),
+                    sideset=int(s["sideset"]) if "sideset" in s else None,
                     timeout=int(s["timeout"]) if "timeout" in s else None,
                 )
             )
@@ -177,6 +189,9 @@ class Plan:
             description=str(data.get("description", "")),
             protocol=str(data.get("protocol", "")),
             direction=str(data.get("direction", "")),
+            sideset_count=int(data.get("sideset_count", 0)),
+            wrap_bottom=int(data.get("wrap_bottom", 0)),
+            wrap_top=int(data.get("wrap_top", 31)),
         )
         plan.validate()
         return plan

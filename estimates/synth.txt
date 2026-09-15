@@ -6,26 +6,27 @@ yosys 0.36+42 (git sha1 70d35314d, clang 11.0.1-2 -fPIC -Os)
 command docker run --rm -v /home/wsb/Documents/Binaries/jane_street:/work -w /work hdlc/yosys yosys -p <script>
 mapping generic Yosys synth -flatten (not CMOS5L standard cells)
 
-cells 2333
-sequential 623
-combo 1710
-yosys_cmos_transistors 10938+
-nand2_eq_combo 2734.5  # transistors/4, combo only
-under_24k_margin true  (2333 < 24000)
+cells 13649
+sequential 2412
+combo 11237
+yosys_cmos_transistors 72822+
+nand2_eq_combo 18205.5  # transistors/4, combo only
+under_24k_margin true  (13649 < 24000)
 
 cells_by_type
-  $_ANDNOT_ 728
-  $_OR_ 649
-  $_SDFFE_PN0P_ 620
-  $_MUX_ 138
-  $_NOT_ 48
-  $_ORNOT_ 42
-  $_NAND_ 37
-  $_NOR_ 29
-  $_XOR_ 23
-  $_AND_ 10
-  $_XNOR_ 6
-  $_SDFF_PN0_ 2
+  $_ANDNOT_ 5059
+  $_OR_ 4301
+  $_SDFFE_PN0P_ 2348
+  $_MUX_ 971
+  $_NOR_ 262
+  $_NOT_ 143
+  $_NAND_ 133
+  $_XOR_ 127
+  $_ORNOT_ 123
+  $_AND_ 89
+  $_SDFF_PN0_ 50
+  $_XNOR_ 29
+  $_SDFFE_PN1P_ 13
   $_SDFFE_PP0P_ 1
 
 CLOCK_PERIOD target 20 ns (50 MHz)

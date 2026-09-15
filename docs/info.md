@@ -4,9 +4,11 @@ Tiny Tapeout datasheet.
 
 ## How it works
 
-A reprogrammable graph engine: pin, wait, delay, shift, fifo, jump. UART, SPI, I2C, and anything else are graphs loaded into instruction memory after tapeout — not hardwired blocks.
+A reprogrammable graph engine: pin, wait, delay, shift, fifo, jump, mov. UART, SPI, I2C, and anything else are graphs loaded into instruction memory after tapeout — not hardwired blocks.
 
-RTL is generated from `generator/loom` (Amaranth). Protocol graphs live in `plans/`.
+The die holds **four 32-instruction graph slots** and **two state machines**. Baud is a clock divider CSR, not a hardwired UART. GPIO inputs are 2-flop synchronised while running.
+
+RTL is generated from `generator/loom` (Amaranth). Protocol graphs live in `plans/`. Production UART 8N1: `uart_8n1_tx.toml` / `uart_8n1_rx.toml`.
 
 ## How to test
 
@@ -22,44 +24,50 @@ Clock is `clk`. `rst_n` is active-low; the engine reset is `~rst_n`. Hold `rst_n
 
 While `ui_in[0]=0` (halted), `uio` is input-only (`uio_oe=0`) and carries host data. While `ui_in[0]=1` (run), `uio` is GPIO.
 
-Strobes are rising-edge sampled: drive 0 for ≥1 clk, 1 for ≥1 clk, 0 for ≥1 clk. Do not raise `ui_in[1]` and `ui_in[7]` on the same cycle. Hold `uio_in` and `ui_in[6:2]` stable through the high phase of a strobe.
+Strobes are rising-edge sampled: drive 0 for ≥1 clk, 1 for ≥1 clk, 0 for ≥1 clk. Hold `uio_in` and `ui_in[6:2]` stable through the high phase of a strobe. `ui_in[1]`+`ui_in[7]` together is a CSR write, not an error.
 
 ### Pins
 
 | pin | function |
 |---|---|
 | `ui_in[0]` | run |
-| `ui_in[1]` | imem write strobe (two-phase) |
-| `ui_in[6:2]` | imem word address (latched on the low-byte strobe) |
-| `ui_in[7]` | TX FIFO push strobe |
+| `ui_in[1]` | strobe A: imem write (two-phase) or CSR (if `ui_in[7]` is also 1) |
+| `ui_in[6:2]` | imem/CSR address (latched on the imem low-byte strobe) |
+| `ui_in[7]` | strobe B: TX push / RX pop; CSR qualifier with strobe A |
+| `ui_in[2]` | during strobe B: 0 = TX push, 1 = RX pop |
 | `uio_in[7:0]` | data byte while run=0; GPIO in while run=1 |
-| `uo_out[0]` | run (echo) |
-| `uo_out[1]` | tx_full |
-| `uo_out[2]` | rx_empty |
-| `uo_out[7:3]` | pc |
+| `uo_out` | run=1: `{pc, rx_empty, tx_full, run}`. Halted with `ui_in[2]=1`: `rx_data`. Else status with run=0. |
 
 ### Load one 16-bit instruction
 
-Word `W` at address `A` (0..31). Example: `A=0`, `W=0xC015` (`SET` pins=`0x15`; low byte `0x15`, high byte `0xC0`).
+Word `W` at address `A` (0..31) in the current write-slot (CSR 0, default slot 0). Example: `A=0`, `W=0xC015`.
 
 1. Halt: `ui_in[0]=0`, `ui_in[7]=0`.
-2. Low byte: `ui_in[6:2]=A` (`0`), `uio_in=W[7:0]` (`0x15`). Pulse `ui_in[1]`: 0 → 1 for ≥1 clk → 0 for ≥1 clk.
-3. High byte: `uio_in=W[15:8]` (`0xC0`). Pulse `ui_in[1]` again. Address is ignored on this pulse. The rising edge commits `{W[15:8], W[7:0]}` to `imem[A]`.
+2. Low byte: `ui_in[6:2]=A` (`0`), `uio_in=W[7:0]` (`0x15`). Pulse `ui_in[1]`.
+3. High byte: `uio_in=W[15:8]` (`0xC0`). Pulse `ui_in[1]` again. The rising edge commits `{W[15:8], W[7:0]}` to `imem[slot][A]`.
 
 A single strobe only latches the low byte; the word is not in imem until the second strobe.
+
+### CSR write
+
+Hold `ui_in[7]=1`, set `ui_in[6:2]` to the CSR address, `uio_in` to the byte, pulse `ui_in[1]`. Useful addresses: `0` write-slot 0..3; `1`/`2` SM0/SM1 execute-slot; `3`/`4`/`5` SM0 clkdiv lo/hi/frac; `6`/`7` SM0 wrap bottom/top.
 
 ### Push one TX byte
 
 FIFO depth is 4. Skip the push if `uo_out[1]` (`tx_full`) is 1.
 
-4. Halt: `ui_in[0]=0`, `ui_in[1]=0`.
-5. `uio_in=byte` (e.g. `0x48` = `'H'`). Pulse `ui_in[7]`: 0 → 1 for ≥1 clk → 0 for ≥1 clk.
+4. Halt: `ui_in[0]=0`, `ui_in[1]=0`, `ui_in[2]=0`.
+5. `uio_in=byte`. Pulse `ui_in[7]`.
+
+### Pop one RX byte
+
+6. Halt, `ui_in[2]=1`. `uo_out` is the FIFO head. Pulse `ui_in[7]` to pop. Skip if `rx_empty`.
 
 ### Run
 
-6. Drive `ui_in[0]=1`. The engine executes from `pc=0`. `uio` becomes GPIO (`uio_oe` follows the graph).
-7. To reprogram: `ui_in[0]=0`, then repeat from step 2. Asserting run clears a half-written imem word so the next load starts on the low byte. Pulse `rst_n` to clear imem, FIFOs, and `pc`.
+7. Drive `ui_in[0]=1`. SM0 and SM1 execute from `pc=0` in their assigned slots. `uio` becomes GPIO (`uio_oe` follows the graphs). Inputs are 2-flop synchronised.
+8. To reprogram: `ui_in[0]=0`, then repeat from step 2. Asserting run clears a half-written imem word. Pulse `rst_n` to clear imem, FIFOs, CSRs, and `pc`.
 
 ## External hardware
 
-Protocol pins on the Tiny Tapeout bidirectional bank. Optional external memory/SD/USB can hold extra graphs; the on-chip working set is 32 instructions.
+Protocol pins on the Tiny Tapeout bidirectional bank. Four graphs live on-chip (32 instructions each). Optional external memory can hold more; the host pages them into a slot.

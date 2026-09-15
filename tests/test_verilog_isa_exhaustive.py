@@ -108,6 +108,7 @@ module tb;
   loom_engine dut (
     .clk(clk), .rst(rst), .run(run), .gpio_in(gpio_in), .gpio_out(gpio_out), .gpio_oe(gpio_oe),
     .imem_we(imem_we), .imem_waddr(waddr), .imem_wdata(wdata),
+    .imem_slot(2'b00), .sm_sel(1'b0), .csr_we(1'b0), .csr_addr(5'b0), .csr_wdata(8'h00),
     .tx_we(tx_we), .tx_data(tx_data), .tx_full(tx_full),
     .rx_re(rx_re), .rx_data(rx_data), .rx_empty(rx_empty), .pc(pc));
   reg [15:0] PRE [0:%(npre)d];

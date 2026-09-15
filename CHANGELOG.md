@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0
+
+- Production graph engine: MOV and JMP Y==0 implemented; clock divider (16.8); wrap; 1-bit sideset
+- Die holds 4×32-word graph slots and 2 state machines (`loom_chip`); host can pop RX
+- GPIO 2FF sync while running; CSR bus for slot/clkdiv/wrap/sideset
+- UART 8N1 production graphs (`uart_8n1_tx.toml` / `uart_8n1_rx.toml`): centre sample, start verify, stop check, dual-SM
+
 ## 0.3.0
 
 - CMOS5L GDS via LibreLane: DRC/LVS clean, 3,499 cells, 50 MHz closed; gl_test and precheck pass in CI

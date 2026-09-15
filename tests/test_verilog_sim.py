@@ -50,6 +50,7 @@ module tb;
     .clk(clk), .rst(rst), .run(tx_run),
     .gpio_in(8'h00), .gpio_out(tx_out), .gpio_oe(tx_oe),
     .imem_we(tx_imem_we), .imem_waddr(tx_waddr), .imem_wdata(tx_wdata),
+    .imem_slot(2'b00), .sm_sel(1'b0), .csr_we(1'b0), .csr_addr(5'b0), .csr_wdata(8'h00),
     .tx_we(tx_we), .tx_data(tx_byte), .tx_full(tx_full),
     .rx_re(1'b0), .rx_data(tx_rxdata), .rx_empty(tx_empty), .pc(tx_pc)
   );
@@ -57,6 +58,7 @@ module tb;
     .clk(clk), .rst(rst), .run(rx_run),
     .gpio_in(tx_out), .gpio_out(rx_out), .gpio_oe(rx_oe),
     .imem_we(rx_imem_we), .imem_waddr(rx_waddr), .imem_wdata(rx_wdata),
+    .imem_slot(2'b00), .sm_sel(1'b0), .csr_we(1'b0), .csr_addr(5'b0), .csr_wdata(8'h00),
     .tx_we(1'b0), .tx_data(8'h00), .tx_full(rx_full),
     .rx_re(rx_re), .rx_data(rx_rxdata), .rx_empty(rx_empty), .pc(rx_pc)
   );

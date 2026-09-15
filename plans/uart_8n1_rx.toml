@@ -1,0 +1,84 @@
+name = "uart_8n1_rx"
+description = "Production 8N1 RX. Start-bit verify, centre sample, stop-bit check. Frame error on pin1."
+protocol = "uart"
+direction = "decode"
+sideset_count = 0
+wrap_bottom = 1
+wrap_top = 14
+
+# pin0 = RX line. pin1 = frame-error flag (1 = last frame bad).
+
+[[steps]]
+name = "flag_dir"
+function = "set_pindirs"
+inputs = ["2"]
+
+[[steps]]
+name = "wait_start"
+function = "wait_pin"
+inputs = ["0", "0"]
+
+[[steps]]
+name = "verify"
+function = "delay"
+delay = 3
+
+[[steps]]
+name = "chk_start"
+function = "jmp_pin"
+inputs = ["wait_start"]
+
+[[steps]]
+name = "to_first"
+function = "delay"
+delay = 4
+
+[[steps]]
+name = "count"
+function = "set_x"
+inputs = ["7"]
+
+[[steps]]
+name = "sample"
+function = "in_lsb"
+inputs = ["1"]
+delay = 6
+
+[[steps]]
+name = "next_bit"
+function = "jmp_x_dec"
+inputs = ["sample"]
+
+[[steps]]
+name = "stop_ok"
+function = "jmp_pin"
+inputs = ["store"]
+
+[[steps]]
+name = "flag"
+function = "set_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "resync"
+function = "wait_pin"
+inputs = ["0", "1"]
+
+[[steps]]
+name = "back"
+function = "jmp"
+inputs = ["wait_start"]
+
+[[steps]]
+name = "store"
+function = "push"
+
+[[steps]]
+name = "clear"
+function = "clr_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "again"
+function = "delay"
+delay = 0

@@ -44,6 +44,7 @@ from loom.isa import (
     OP_FIFO,
     OP_IN,
     OP_JMP,
+    OP_MOV,
     OP_NOP,
     OP_OUT,
     OP_SET,
@@ -74,6 +75,13 @@ class Harness(Elaboratable):
         m = Module()
         dut = self.dut
         m.submodules.dut = dut.elaborate(platform)  # populates dut.dbg
+        m.d.comb += [
+            dut.csr_we.eq(0),
+            dut.imem_slot.eq(0),
+            dut.sm_sel.eq(0),
+            dut.csr_addr.eq(0),
+            dut.csr_wdata.eq(0),
+        ]
         d = dut.dbg
         x, y, osr, isr = d["x"][0], d["y"][0], d["osr"][0], d["isr"][0]
         delay_ctr, out_pin, in_pin = d["delay_ctr"][0], d["out_pin"][0], d["in_pin"][0]
@@ -82,6 +90,8 @@ class Harness(Elaboratable):
         tx_r, tx_w, tx_n = d["tx_r"], d["tx_w"], d["tx_n"]
         rx_r, rx_w, rx_n = d["rx_r"], d["rx_w"], d["rx_n"]
         eff = d["eff"]
+        clk_en = d["clk_en"][0]
+        wrap_bot, wrap_top = d["wrap_bot"][0], d["wrap_top"][0]
         pc, out, oe = dut.pc, dut.gpio_out, dut.gpio_oe
 
         # ---- one cycle of history -------------------------------------
@@ -97,7 +107,8 @@ class Harness(Elaboratable):
             run=past(dut.run, "run"), pc=past(pc, "pc"), x=past(x, "x"), y=past(y, "y"),
             osr=past(osr, "osr"), isr=past(isr, "isr"), out=past(out, "out"), oe=past(oe, "oe"),
             delay_ctr=past(delay_ctr, "dc"), out_pin=past(out_pin, "op"), in_pin=past(in_pin, "ip"),
-            instr=past(instr, "instr"), eff=past(eff, "eff"),
+            instr=past(instr, "instr"), eff=past(eff, "eff"), clk_en=past(clk_en, "clken"),
+            wrap_bot=past(wrap_bot, "wbot"), wrap_top=past(wrap_top, "wtop"),
             tx_r=past(tx_r, "txr"), tx_w=past(tx_w, "txw"), tx_n=past(tx_n, "txn"),
             rx_r=past(rx_r, "rxr"), rx_w=past(rx_w, "rxw"), rx_n=past(rx_n, "rxn"),
             tx_we=past(dut.tx_we, "txwe"), tx_data=past(dut.tx_data, "txd"),
@@ -126,6 +137,12 @@ class Harness(Elaboratable):
         A("tx_ptr_consistent", ((tx_w - tx_r) & 3) == (tx_n & 3))
         A("rx_ptr_consistent", ((rx_w - rx_r) & 3) == (rx_n & 3))
         A("rx_data_is_head", dut.rx_data == sel(rx_mem, rx_r))
+        # Formal proves the ISA with default CSRs. Non-default clkdiv/wrap/sideset
+        # are covered by interp≡RTL tests. csr_we is tied off, so these stick.
+        A("formal_clkdiv_1", d["clkdiv_int"][0] == 1)
+        A("formal_wrap_top_31", wrap_top == 31)
+        A("formal_wrap_bot_0", wrap_bot == 0)
+        A("formal_sideset_off", d["side_count"][0] == 0)
 
         # ---- history-based properties --------------------------------
         p = P
@@ -167,9 +184,10 @@ class Harness(Elaboratable):
         # ---- ISA one-step semantics ----------------------------------
         pi = p["instr"]
         op, delay, field, payload = pi[13:16], pi[8:13], pi[5:8], pi[0:5]
-        step = p["run"] & (p["delay_ctr"] == 0)      # an instruction executed
+        step = p["run"] & p["clk_en"] & (p["delay_ctr"] == 0)      # an instruction executed
         pc1 = (p["pc"] + 1)[0:5]
-        adv = (pc == pc1) & (delay_ctr == delay)     # normal advance
+        wrap_pc = Mux(p["pc"] == p["wrap_top"], p["wrap_bot"], pc1)
+        adv = (pc == wrap_pc) & (delay_ctr == delay)     # +1, or wrap
         jmp_to = (pc == payload) & (delay_ctr == delay)
         stalled = (pc == p["pc"]) & (delay_ctr == 0)
         same_regs = (x == p["x"]) & (y == p["y"])
@@ -180,8 +198,9 @@ class Harness(Elaboratable):
         untouched = same_regs & same_shift & same_pins & no_pull & no_push
 
         # delay counter ticking
-        HA("delay_counts_down", ~(p["run"] & (p["delay_ctr"] != 0)) |
+        HA("delay_counts_down", ~(p["run"] & p["clk_en"] & (p["delay_ctr"] != 0)) |
            ((delay_ctr == (p["delay_ctr"] - 1)[0:5]) & (pc == p["pc"]) & untouched))
+        HA("clk_en_off_freezes_sm", ~(p["run"] & ~p["clk_en"]) | frozen)
 
         def when(cond):
             return ~(step & cond)
@@ -193,7 +212,8 @@ class Harness(Elaboratable):
         HA("jmp_always", when((op == OP_JMP) & (field == JMP_ALWAYS)) | (jmp_to & untouched))
         HA("jmp_x_eq0", when((op == OP_JMP) & (field == JMP_X_EQ0)) |
            (Mux(p["x"] == 0, jmp_to, adv) & untouched))
-        HA("jmp_y_eq0_is_fallthrough", when((op == OP_JMP) & (field == JMP_Y_EQ0)) | (adv & untouched))
+        HA("jmp_y_eq0", when((op == OP_JMP) & (field == JMP_Y_EQ0)) |
+           (Mux(p["y"] == 0, jmp_to, adv) & untouched))
         HA("jmp_x_dec", when((op == OP_JMP) & (field == JMP_X_DEC)) |
            Mux(p["x"] != 0, jmp_to & (x == (p["x"] - 1)[0:8]) & (y == p["y"]), adv & same_regs)
            & same_shift & same_pins & no_pull & no_push)
@@ -256,6 +276,26 @@ class Harness(Elaboratable):
         HA("set_inpin", set_is(SET_INPIN) |
            (adv & (in_pin == payload[0:3]) & (out_pin == p["out_pin"]) & (out == p["out"]) & (oe == p["oe"])
             & same_regs & same_shift & no_pull & no_push))
+        # MOV: dest=field, src=payload. Pins dest updates out; others leave pins.
+        mov_src = Mux(payload == 0, p["x"],
+                   Mux(payload == 1, p["y"],
+                   Mux(payload == 2, p["osr"],
+                   Mux(payload == 3, p["isr"],
+                   Mux(payload == 4, p["eff"], 0)))))
+        mov = op == OP_MOV
+        HA("mov_x", when(mov & (field == 0)) |
+           (adv & (x == mov_src) & (y == p["y"]) & same_shift & same_pins & no_pull & no_push))
+        HA("mov_y", when(mov & (field == 1)) |
+           (adv & (y == mov_src) & (x == p["x"]) & same_shift & same_pins & no_pull & no_push))
+        HA("mov_osr", when(mov & (field == 2)) |
+           (adv & (osr == mov_src) & (isr == p["isr"]) & same_regs & same_pins & no_pull & no_push))
+        HA("mov_isr", when(mov & (field == 3)) |
+           (adv & (isr == mov_src) & (osr == p["osr"]) & same_regs & same_pins & no_pull & no_push))
+        HA("mov_pins", when(mov & (field == 4)) |
+           (adv & (out == mov_src) & (oe == p["oe"]) & same_regs & same_shift
+            & (out_pin == p["out_pin"]) & (in_pin == p["in_pin"]) & no_pull & no_push))
+        HA("mov_null_dest", when(mov & (field > 4)) |
+           (adv & untouched))
 
         for name, cond in asserts:
             m.d.comb += Assert(cond, message=name)

@@ -33,6 +33,8 @@ REQUIRED_PRIMITIVES = frozenset(
         "delay",
         "jmp",
         "jmp_x_dec",
+        "jmp_y_eq0",
+        "mov",
         "set_x",
         "set_bit",
         "clr_bit",

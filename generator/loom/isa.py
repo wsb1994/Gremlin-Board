@@ -5,9 +5,12 @@ A protocol is a graph of these nodes, loaded after tapeout.
 
 Bit layout:
   [15:13] opcode
-  [12:8]  delay (extra cycles after the op, 0-31)
+  [12:8]  delay (extra cycles after the op, 0-31). If sideset_count=1, [12] is
+          the sideset bit and [11:8] is delay 0-15.
   [7:5]   field (dest / condition / push-vs-pull)
-  [4:0]   payload (imm, pin, address; reserved for IN/OUT, which move one bit)
+  [4:0]   payload (imm, pin, address, MOV src; reserved for IN/OUT, which move one bit)
+
+On-die extras (CSRs, not opcodes): clock divider, wrap, 4 graph slots, 2 SMs.
 """
 
 from __future__ import annotations
@@ -69,6 +72,25 @@ REG_NULL = 5
 
 IMEM_WORDS = 32
 FIFO_DEPTH = 4
+N_SLOTS = 4  # resident graphs on the Tiny Tapeout die
+N_SM_CHIP = 2
+
+# CSR byte addresses (halted we+tx strobe). Per-SM blocks are 16 apart.
+CSR_WRITE_SLOT = 0  # subsequent imem writes land in this slot
+CSR_SM0_SLOT = 1
+CSR_SM1_SLOT = 2
+CSR_SM0_CLKDIV_LO = 3
+CSR_SM0_CLKDIV_HI = 4
+CSR_SM0_CLKDIV_FRAC = 5
+CSR_SM0_WRAP_BOT = 6
+CSR_SM0_WRAP_TOP = 7
+CSR_SM0_SIDE = 8  # [2:0] base pin, [4]=sideset_count (0 or 1)
+CSR_SM1_CLKDIV_LO = 19
+CSR_SM1_CLKDIV_HI = 20
+CSR_SM1_CLKDIV_FRAC = 21
+CSR_SM1_WRAP_BOT = 22
+CSR_SM1_WRAP_TOP = 23
+CSR_SM1_SIDE = 24
 
 
 def encode(op: int, delay: int = 0, field: int = 0, payload: int = 0) -> int:

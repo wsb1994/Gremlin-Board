@@ -24,7 +24,7 @@ pinout:
   ui[4]: "imem_addr[2]"
   ui[5]: "imem_addr[3]"
   ui[6]: "imem_addr[4]"
-  ui[7]: "tx_push"
+  ui[7]: "fifo_csr"
   uo[0]: "run"
   uo[1]: "tx_full"
   uo[2]: "rx_empty"
