@@ -1,5 +1,5 @@
 name = "jtag_tx"
-description = "Bit-bang TDI=pin0 TCK=pin1, MSB first. Same pin dance as a TAP shift."
+description = "JTAG TAP: TDI=pin0 TCK=pin1 TMS=pin2. TLR, Shift-DR 8 TDI LSB, Update-DR."
 protocol = "jtag"
 direction = "encode"
 
@@ -11,26 +11,103 @@ inputs = ["0"]
 [[steps]]
 name = "drive"
 function = "set_pindirs"
-inputs = ["3"]
+inputs = ["7"]
 
 [[steps]]
 name = "pull_byte"
 function = "pull"
 
+# TLR: 5 TCK with TMS=1 TDI=0
 [[steps]]
-name = "count"
+name = "tlr_count"
 function = "set_x"
-inputs = ["7"]
+inputs = ["4"]
+
+[[steps]]
+name = "tlr_lo"
+function = "set_pins"
+inputs = ["4"]
+
+[[steps]]
+name = "tlr_hi"
+function = "set_pins"
+inputs = ["6"]
+delay = 1
+
+[[steps]]
+name = "tlr_next"
+function = "jmp_x_dec"
+inputs = ["tlr_lo"]
+
+# RTI TMS=0
+[[steps]]
+name = "rti_lo"
+function = "set_pins"
+inputs = ["0"]
+
+[[steps]]
+name = "rti_hi"
+function = "set_pins"
+inputs = ["2"]
+delay = 1
+
+# Select-DR-Scan TMS=1
+[[steps]]
+name = "sel_lo"
+function = "set_pins"
+inputs = ["4"]
+
+[[steps]]
+name = "sel_hi"
+function = "set_pins"
+inputs = ["6"]
+delay = 1
+
+# Capture-DR TMS=0
+[[steps]]
+name = "cap_lo"
+function = "set_pins"
+inputs = ["0"]
+
+[[steps]]
+name = "cap_hi"
+function = "set_pins"
+inputs = ["2"]
+delay = 1
+
+# Shift-DR TMS=0
+[[steps]]
+name = "sh_lo"
+function = "set_pins"
+inputs = ["0"]
+
+[[steps]]
+name = "sh_hi"
+function = "set_pins"
+inputs = ["2"]
+delay = 1
+
+[[steps]]
+name = "data_setup"
+function = "set_pins"
+inputs = ["0"]
+
+# bits 0..6 TMS=0, LSB first
+[[steps]]
+name = "shift_count"
+function = "set_x"
+inputs = ["6"]
 
 [[steps]]
 name = "data"
-function = "out_msb"
+function = "out_lsb"
 inputs = ["1"]
 
 [[steps]]
 name = "tck_hi"
 function = "set_bit"
 inputs = ["1"]
+delay = 1
 
 [[steps]]
 name = "tck_lo"
@@ -41,6 +118,57 @@ inputs = ["1"]
 name = "next_bit"
 function = "jmp_x_dec"
 inputs = ["data"]
+
+# bit 7 TMS=1 Exit1-DR
+[[steps]]
+name = "exit_tms"
+function = "set_bit"
+inputs = ["2"]
+
+[[steps]]
+name = "last_data"
+function = "out_lsb"
+inputs = ["1"]
+
+[[steps]]
+name = "last_hi"
+function = "set_bit"
+inputs = ["1"]
+delay = 1
+
+[[steps]]
+name = "last_lo"
+function = "clr_bit"
+inputs = ["1"]
+
+# Update-DR TMS=1 TDI=0
+[[steps]]
+name = "upd_lo"
+function = "set_pins"
+inputs = ["4"]
+
+[[steps]]
+name = "upd_hi"
+function = "set_pins"
+inputs = ["6"]
+delay = 1
+
+# RTI TMS=0
+[[steps]]
+name = "end_lo"
+function = "set_pins"
+inputs = ["0"]
+
+[[steps]]
+name = "end_hi"
+function = "set_pins"
+inputs = ["2"]
+delay = 1
+
+[[steps]]
+name = "end_idle"
+function = "set_pins"
+inputs = ["0"]
 
 [[steps]]
 name = "again"

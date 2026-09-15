@@ -44,6 +44,12 @@ def cmd_formal(_args: argparse.Namespace) -> int:
     return formal_main()
 
 
+def cmd_formal_proto(_args: argparse.Namespace) -> int:
+    from loom.formal_proto import main as proto_main
+
+    return proto_main()
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
         prog="loom",
@@ -55,6 +61,10 @@ def main(argv: list[str] | None = None) -> None:
     sub.add_parser("plans", help="list protocol graphs")
     sub.add_parser("synth", help="generic Yosys area estimate")
     sub.add_parser("formal", help="k-induction proof of ISA step semantics + FIFO invariants")
+    sub.add_parser(
+        "formal-proto",
+        help="protocol completeness: all 256 bytes, TX encoding + RX spec + round-trip + loop",
+    )
     args = parser.parse_args(argv)
     fn = {
         "emit": cmd_emit,
@@ -62,6 +72,7 @@ def main(argv: list[str] | None = None) -> None:
         "plans": cmd_plans,
         "synth": cmd_synth,
         "formal": cmd_formal,
+        "formal-proto": cmd_formal_proto,
     }[args.cmd]
     sys.exit(fn(args))
 

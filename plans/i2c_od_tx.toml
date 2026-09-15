@@ -1,10 +1,11 @@
 name = "i2c_od_tx"
-description = "Open-drain master write. SDA=pin0 SCL=pin1. Drive 0 via OE, ACK slot, stretch wait."
+description = "Open-drain 1-byte pipe: START, 8 MSB, self-ACK 0, STOP, jmp pull. SDA=pin0 SCL=pin1. Drive 0 via OE."
 protocol = "i2c"
 direction = "encode"
 
 # gpio_out stays 0 on SDA/SCL. Drive 0 = OE 1; release = OE 0 (pull-up).
 # Pin 2 is a scratch bit so jmp_pin can branch on the OSR MSB without driving SDA high.
+# Do not wait_pin on a released SDA/SCL: gpio_in=0 is not a pull-up.
 
 [[steps]]
 name = "idle_out"
@@ -27,9 +28,8 @@ function = "set_inpin"
 inputs = ["2"]
 
 [[steps]]
-name = "nbytes"
-function = "set_y"
-inputs = ["1"]
+name = "pull_byte"
+function = "pull"
 
 [[steps]]
 name = "start_sda"
@@ -40,10 +40,6 @@ inputs = ["1"]
 name = "start_scl"
 function = "set_pindirs"
 inputs = ["3"]
-
-[[steps]]
-name = "pull_byte"
-function = "pull"
 
 [[steps]]
 name = "count"
@@ -74,21 +70,17 @@ inputs = ["7"]
 name = "bit_zero_clk"
 function = "set_pindirs"
 inputs = ["5"]
+delay = 1
 
 [[steps]]
 name = "to_wait"
 function = "jmp"
-inputs = ["wait_scl"]
+inputs = ["next_bit"]
 
 [[steps]]
 name = "bit_one"
 function = "set_pindirs"
 inputs = ["4"]
-
-[[steps]]
-name = "wait_scl"
-function = "wait_pin"
-inputs = ["1", "1"]
 delay = 1
 
 [[steps]]
@@ -99,31 +91,16 @@ inputs = ["bit_prep"]
 [[steps]]
 name = "ack_prep"
 function = "set_pindirs"
-inputs = ["6"]
+inputs = ["7"]
 
 [[steps]]
 name = "ack_clk"
 function = "set_pindirs"
-inputs = ["4"]
-
-[[steps]]
-name = "ack_wait"
-function = "wait_pin"
-inputs = ["1", "1"]
+inputs = ["5"]
 delay = 1
 
 [[steps]]
-name = "ack_done"
-function = "set_pindirs"
-inputs = ["6"]
-
-[[steps]]
-name = "next_byte"
-function = "jmp_y_dec"
-inputs = ["pull_byte"]
-
-[[steps]]
-name = "stop_sda"
+name = "ack_lo"
 function = "set_pindirs"
 inputs = ["3"]
 
@@ -136,8 +113,9 @@ inputs = ["1"]
 name = "stop"
 function = "set_pindirs"
 inputs = ["0"]
+delay = 1
 
 [[steps]]
-name = "done"
+name = "again"
 function = "jmp"
-inputs = ["done"]
+inputs = ["pull_byte"]

@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import struct
 import zlib
+from pathlib import Path
+
+_FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 
 def png_1x1(rgb: tuple[int, int, int] = (255, 0, 128)) -> bytes:
@@ -61,6 +64,15 @@ def csv_tick() -> bytes:
 def packed_tick() -> bytes:
     # sym_id, bid_ticks, ask_ticks, bid_sz, ask_sz, ts_ns
     return struct.pack(">IHHIIQ", 0x4141504C, 19241, 19243, 200, 150, 1710000000123)
+
+
+def big_chungus_png() -> bytes:
+    """Real PNG of Big Chungus used as a binary wire payload."""
+    path = _FIXTURES / "big_chungus.png"
+    data = path.read_bytes()
+    if not data.startswith(b"\x89PNG\r\n\x1a\n"):
+        raise ValueError(f"{path} is not a PNG")
+    return data
 
 
 PAYLOADS: dict[str, bytes] = {

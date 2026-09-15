@@ -95,6 +95,7 @@ class Plan:
     protocol: str = ""
     direction: str = ""  # encode | decode | both
     sideset_count: int = 0  # 0 = delay is 5 bits; 1 = delay 4 bits + 1 sideset bit
+    side_base: int = 0  # GPIO pin driven by sideset when sideset_count=1
     wrap_bottom: int = 0
     wrap_top: int = 31
 
@@ -190,6 +191,7 @@ class Plan:
             protocol=str(data.get("protocol", "")),
             direction=str(data.get("direction", "")),
             sideset_count=int(data.get("sideset_count", 0)),
+            side_base=int(data.get("side_base", 0)),
             wrap_bottom=int(data.get("wrap_bottom", 0)),
             wrap_top=int(data.get("wrap_top", 31)),
         )

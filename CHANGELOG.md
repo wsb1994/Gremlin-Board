@@ -6,6 +6,8 @@
 - Die holds 4×32-word graph slots and 2 state machines (`loom_chip`); host can pop RX
 - GPIO 2FF sync while running; CSR bus for slot/clkdiv/wrap/sideset
 - UART 8N1 production graphs (`uart_8n1_tx.toml` / `uart_8n1_rx.toml`): centre sample, start verify, stop check, dual-SM
+- Protocol completeness (`loom formal-proto`): all 256 bytes on every TX/RX pair — encoding ∈ L, RX(spec)=id, round-trip, pull-loop
+- Contest line codecs in 32-word graphs: SPI mode-0+CS, I2C open-drain, JTAG TMS TAP, SWD line-reset, PS/2 odd parity+ACK, CAN stuffed CRC-15, USB LS NRZI+SYNC+EOP, Ethernet preamble/SFD; Big Chungus PNG SHA-256 round-trip on each pair
 
 ## 0.3.0
 

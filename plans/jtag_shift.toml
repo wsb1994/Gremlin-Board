@@ -1,7 +1,39 @@
 name = "jtag_shift"
-description = "Clock TCK, TMS=0, capture TDO MSB-first. Device model supplies TDO."
+description = "Sample TDI/TDO=pin0 on TCK rise, 8 LSB bits of the Shift-DR window."
 protocol = "jtag"
 direction = "decode"
+
+# Wait until TX drives TCK (pull-up idles high).
+[[steps]]
+name = "sync"
+function = "wait_pin"
+inputs = ["1", "0"]
+
+# 5 TLR + RTI + Select-DR + Capture-DR + Shift-DR
+[[steps]]
+name = "skip_count"
+function = "set_y"
+inputs = ["8"]
+
+[[steps]]
+name = "count"
+function = "set_x"
+inputs = ["7"]
+
+[[steps]]
+name = "skip_hi"
+function = "wait_pin"
+inputs = ["1", "1"]
+
+[[steps]]
+name = "skip_lo"
+function = "wait_pin"
+inputs = ["1", "0"]
+
+[[steps]]
+name = "skip_next"
+function = "jmp_y_dec"
+inputs = ["skip_hi"]
 
 [[steps]]
 name = "wait_tck_hi"
@@ -10,44 +42,40 @@ inputs = ["1", "1"]
 
 [[steps]]
 name = "sample"
-function = "in_msb"
+function = "in_lsb"
 inputs = ["1"]
-
-[[steps]]
-name = "wait_tck_lo"
-function = "wait_pin"
-inputs = ["1", "0"]
-
-[[steps]]
-name = "count"
-function = "set_x"
-inputs = ["6"]
-
-[[steps]]
-name = "wait_hi2"
-function = "wait_pin"
-inputs = ["1", "1"]
-
-[[steps]]
-name = "sample2"
-function = "in_msb"
-inputs = ["1"]
-
-[[steps]]
-name = "wait_lo2"
-function = "wait_pin"
-inputs = ["1", "0"]
 
 [[steps]]
 name = "next"
 function = "jmp_x_dec"
-inputs = ["wait_hi2"]
+inputs = ["wait_tck_hi"]
 
 [[steps]]
 name = "store"
 function = "push"
 
+# Update-DR + RTI
+[[steps]]
+name = "tail_hi"
+function = "wait_pin"
+inputs = ["1", "1"]
+
+[[steps]]
+name = "tail_lo"
+function = "wait_pin"
+inputs = ["1", "0"]
+
+[[steps]]
+name = "tail_hi2"
+function = "wait_pin"
+inputs = ["1", "1"]
+
+[[steps]]
+name = "tail_lo2"
+function = "wait_pin"
+inputs = ["1", "0"]
+
 [[steps]]
 name = "again"
 function = "jmp"
-inputs = ["wait_tck_hi"]
+inputs = ["skip_count"]

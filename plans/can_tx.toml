@@ -1,51 +1,175 @@
 name = "can_tx"
-description = "CAN bit-layer subset: idle recessive 1, SOF 0, 8 data bits LSB, IFS 1. No bit stuffing/CRC."
+description = "CAN: SOF, 8 LSB, both-polarity stuff through CRC-15 0x4599, ACK 0, IFS 1. pin0=bus pin2=clk pin1=last pin4=crc-phase."
 protocol = "can"
 direction = "encode"
-
-[[steps]]
-name = "idle"
-function = "set_pins"
-inputs = ["1"]
+sideset_count = 1
+side_base = 2
+wrap_bottom = 24
+wrap_top = 17
 
 [[steps]]
 name = "drive"
 function = "set_pindirs"
-inputs = ["1"]
+inputs = ["31"]
 
 [[steps]]
 name = "pull_byte"
 function = "pull"
 
 [[steps]]
-name = "count"
-function = "set_x"
-inputs = ["7"]
-
-[[steps]]
 name = "sof"
 function = "set_pins"
 inputs = ["0"]
 delay = 7
+sideset = 1
+
+[[steps]]
+name = "stn"
+function = "set_y"
+inputs = ["3"]
+
+[[steps]]
+name = "dn"
+function = "set_x"
+inputs = ["7"]
+
+[[steps]]
+name = "more"
+function = "set_inpin"
+inputs = ["4"]
+
+[[steps]]
+name = "mp"
+function = "jmp_pin"
+inputs = ["cbit"]
 
 [[steps]]
 name = "bit"
+function = "mov"
+inputs = ["null", "crc_feed"]
+
+[[steps]]
+name = "dbit"
 function = "out_lsb"
 inputs = ["1"]
-delay = 6
 
 [[steps]]
-name = "next_bit"
-function = "jmp_x_dec"
-inputs = ["bit"]
-
-[[steps]]
-name = "ifs"
-function = "set_pins"
-inputs = ["1"]
+name = "pulse"
+function = "set_inpin"
+inputs = ["0"]
 delay = 7
+sideset = 1
 
 [[steps]]
-name = "again"
+name = "is1"
+function = "jmp_pin"
+inputs = ["one"]
+
+[[steps]]
+name = "si3"
+function = "set_inpin"
+inputs = ["1"]
+
+[[steps]]
+name = "lz"
+function = "jmp_pin"
+inputs = ["chg"]
+
+[[steps]]
+name = "y0"
+function = "jmp_y_dec"
+inputs = ["nxt"]
+
+[[steps]]
+name = "xor"
+function = "set_y"
+inputs = ["3"]
+
+[[steps]]
+name = "xorm"
+function = "mov"
+inputs = ["pins", "xor_y"]
+delay = 7
+sideset = 1
+
+[[steps]]
+name = "xsp"
+function = "jmp"
+inputs = ["nxt"]
+
+[[steps]]
+name = "nxt"
+function = "jmp_x_dec"
+inputs = ["more"]
+
+[[steps]]
+name = "one"
+function = "set_inpin"
+inputs = ["1"]
+
+[[steps]]
+name = "oj"
+function = "jmp_pin"
+inputs = ["y0"]
+
+[[steps]]
+name = "chg"
+function = "set_y"
+inputs = ["2"]
+
+[[steps]]
+name = "chx"
+function = "mov"
+inputs = ["pins", "xor_y"]
+
+[[steps]]
+name = "chy"
+function = "set_y"
+inputs = ["3"]
+
+[[steps]]
+name = "oj2"
+function = "jmp"
+inputs = ["nxt"]
+
+[[steps]]
+name = "chk"
+function = "set_inpin"
+inputs = ["4"]
+
+[[steps]]
+name = "jp"
+function = "jmp_pin"
+inputs = ["eof1"]
+
+[[steps]]
+name = "cn"
+function = "set_bit"
+inputs = ["4"]
+
+[[steps]]
+name = "cnx"
+function = "set_x"
+inputs = ["15"]
+
+[[steps]]
+name = "cbit"
+function = "mov"
+inputs = ["osr", "crc_out"]
+
+[[steps]]
+name = "cj"
+function = "jmp"
+inputs = ["dbit"]
+
+[[steps]]
+name = "eof1"
+function = "set_bit"
+inputs = ["0"]
+delay = 7
+sideset = 1
+
+[[steps]]
+name = "efj"
 function = "jmp"
 inputs = ["pull_byte"]

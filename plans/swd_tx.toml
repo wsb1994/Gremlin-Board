@@ -1,12 +1,12 @@
 name = "swd_tx"
-description = "SWDIO=pin0 SWCLK=pin1, LSB first."
+description = "SWDIO=pin0 SWCLK=pin1. Line-reset ≥50 clocks with SWDIO=1, then 8 LSB data."
 protocol = "swd"
 direction = "encode"
 
 [[steps]]
 name = "idle"
 function = "set_pins"
-inputs = ["0"]
+inputs = ["1"]
 
 [[steps]]
 name = "drive"
@@ -16,6 +16,41 @@ inputs = ["3"]
 [[steps]]
 name = "pull_byte"
 function = "pull"
+
+[[steps]]
+name = "dio_hi"
+function = "set_bit"
+inputs = ["0"]
+
+[[steps]]
+name = "reset_y"
+function = "set_y"
+inputs = ["1"]
+
+[[steps]]
+name = "reset_x"
+function = "set_x"
+inputs = ["24"]
+
+[[steps]]
+name = "rst_hi"
+function = "set_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "rst_lo"
+function = "clr_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "rst_next"
+function = "jmp_x_dec"
+inputs = ["rst_hi"]
+
+[[steps]]
+name = "rst_outer"
+function = "jmp_y_dec"
+inputs = ["reset_x"]
 
 [[steps]]
 name = "count"

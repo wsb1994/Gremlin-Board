@@ -1,7 +1,17 @@
 name = "spi_rx"
-description = "Mode-0 decode, sample MOSI on SCK rising. data=pin0, sck=pin1."
+description = "Mode-0 decode with CS. Wait CS low, sample MOSI on SCK rising, 8 MSB, wait CS high."
 protocol = "spi"
 direction = "decode"
+
+[[steps]]
+name = "wait_cs_lo"
+function = "wait_pin"
+inputs = ["2", "0"]
+
+[[steps]]
+name = "count"
+function = "set_x"
+inputs = ["7"]
 
 [[steps]]
 name = "wait_rise"
@@ -14,40 +24,20 @@ function = "in_msb"
 inputs = ["1"]
 
 [[steps]]
-name = "wait_fall"
-function = "wait_pin"
-inputs = ["1", "0"]
-
-[[steps]]
-name = "count_init"
-function = "set_x"
-inputs = ["6"]
-
-[[steps]]
-name = "wait_rise2"
-function = "wait_pin"
-inputs = ["1", "1"]
-
-[[steps]]
-name = "sample2"
-function = "in_msb"
-inputs = ["1"]
-
-[[steps]]
-name = "wait_fall2"
-function = "wait_pin"
-inputs = ["1", "0"]
-
-[[steps]]
-name = "next"
+name = "next_bit"
 function = "jmp_x_dec"
-inputs = ["wait_rise2"]
+inputs = ["wait_rise"]
 
 [[steps]]
 name = "store"
 function = "push"
 
 [[steps]]
+name = "wait_cs_hi"
+function = "wait_pin"
+inputs = ["2", "1"]
+
+[[steps]]
 name = "again"
 function = "jmp"
-inputs = ["wait_rise"]
+inputs = ["wait_cs_lo"]

@@ -4,7 +4,7 @@ Agent-programmable pin/time engine for the Jane Street protocol-emulator ASIC co
 
 Protocols are graphs in `plans/`. The silicon is one ISA: pin, wait, delay, shift, fifo, jump, mov. Four graph slots and two state machines on the die. Load a new graph after tapeout; do not resynth.
 
-This is a contest tapeout candidate, not a trading NIC. USB/Ethernet/CAN graphs are bit-layer subsets (see plan descriptions). 50 MHz closes on CMOS5L (LibreLane, slow corner setup slack +9.0 ns).
+This is a contest tapeout candidate, not a trading NIC. USB/Ethernet/CAN graphs are digital line codecs (NRZI packet, 802.3 framing on clock+data, stuffed CRC-15), not analog PHYs. 50 MHz closes on CMOS5L (LibreLane, slow corner setup slack +9.0 ns).
 
 ## Install
 
@@ -23,6 +23,7 @@ make synth          # generic Yosys area → estimates/synth.txt
 make test-verilog   # iverilog on generated RTL (Docker if needed)
 make test-exhaustive # all 2048 ISA encodings x 7 stimuli: interp vs emitted Verilog
 make formal         # k-induction proof: ISA step semantics + FIFO/halt invariants
+make formal-proto   # all 256 bytes × every protocol graph: encoding + decode + round-trip
 make verify         # the three above
 ```
 
@@ -32,7 +33,8 @@ Load a graph onto the chip: `docs/info.md` (two-phase imem write, TX push, run).
 
 ## What is proven
 
-- UART, SPI, I2C, JTAG, SWD, PS/2, CAN, USB, eth: `Hi` round-trip in interpreter and iverilog
+- Protocol completeness: every byte 0..255 on UART (hello + 8N1), SPI, I2C, JTAG, SWD, PS/2, CAN, USB, eth — TX encoding ∈ L, RX(spec(b))=b, RX(TX(b))=b, SM loops on pull (`loom formal-proto`)
+- UART (hello + 8N1), SPI, I2C, JTAG, SWD, PS/2, CAN, USB, eth: `Hi` and Big Chungus PNG SHA-256 round-trip on the interpreter
 - Open-drain I2C + ACK + stretch: `tests/test_i2c_opendrain.py`
 - Constrained-random pins (baud error, edge jitter, gaps, glitches, SPI clock asymmetry): `tests/test_random_jitter.py`; `plans/uart_rx_frame.toml` rejects runt starts and flags bad stop bits on pin1
 - Exhaustive ISA golden, interp vs emitted Verilog, every encoding: `tests/test_verilog_isa_exhaustive.py`

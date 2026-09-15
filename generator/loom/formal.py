@@ -276,25 +276,32 @@ class Harness(Elaboratable):
         HA("set_inpin", set_is(SET_INPIN) |
            (adv & (in_pin == payload[0:3]) & (out_pin == p["out_pin"]) & (out == p["out"]) & (oe == p["oe"])
             & same_regs & same_shift & no_pull & no_push))
-        # MOV: dest=field, src=payload. Pins dest updates out; others leave pins.
-        mov_src = Mux(payload == 0, p["x"],
+        # MOV: dest=field, src=payload. payload 6 = dest ^ Y. Pins dest updates out.
+        dest_cur = Mux(field == 0, p["x"],
+                    Mux(field == 1, p["y"],
+                    Mux(field == 2, p["osr"],
+                    Mux(field == 3, p["isr"],
+                    Mux(field == 4, p["out"], 0)))))
+        mov_src = Mux(payload == 6, dest_cur ^ p["y"],
+                   Mux(payload == 0, p["x"],
                    Mux(payload == 1, p["y"],
                    Mux(payload == 2, p["osr"],
                    Mux(payload == 3, p["isr"],
-                   Mux(payload == 4, p["eff"], 0)))))
+                   Mux(payload == 4, p["eff"], 0))))))
         mov = op == OP_MOV
-        HA("mov_x", when(mov & (field == 0)) |
+        ordinary = payload <= 6
+        HA("mov_x", when(mov & (field == 0) & ordinary) |
            (adv & (x == mov_src) & (y == p["y"]) & same_shift & same_pins & no_pull & no_push))
-        HA("mov_y", when(mov & (field == 1)) |
+        HA("mov_y", when(mov & (field == 1) & ordinary) |
            (adv & (y == mov_src) & (x == p["x"]) & same_shift & same_pins & no_pull & no_push))
-        HA("mov_osr", when(mov & (field == 2)) |
+        HA("mov_osr", when(mov & (field == 2) & ordinary) |
            (adv & (osr == mov_src) & (isr == p["isr"]) & same_regs & same_pins & no_pull & no_push))
-        HA("mov_isr", when(mov & (field == 3)) |
+        HA("mov_isr", when(mov & (field == 3) & ordinary) |
            (adv & (isr == mov_src) & (osr == p["osr"]) & same_regs & same_pins & no_pull & no_push))
-        HA("mov_pins", when(mov & (field == 4)) |
+        HA("mov_pins", when(mov & (field == 4) & ordinary) |
            (adv & (out == mov_src) & (oe == p["oe"]) & same_regs & same_shift
             & (out_pin == p["out_pin"]) & (in_pin == p["in_pin"]) & no_pull & no_push))
-        HA("mov_null_dest", when(mov & (field > 4)) |
+        HA("mov_null_dest", when(mov & (field > 4) & ordinary) |
            (adv & untouched))
 
         for name, cond in asserts:

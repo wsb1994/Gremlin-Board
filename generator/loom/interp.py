@@ -30,6 +30,13 @@ from loom.isa import (
     REG_OSR,
     REG_PINS,
     REG_X,
+    REG_XOR_Y,
+    REG_CRC_CLR,
+    REG_CRC_FEED,
+    REG_CRC_HI,
+    REG_CRC_LO,
+    REG_CRC_OUT,
+    CRC15_POLY,
     REG_Y,
     SET_BIT,
     SET_INPIN,
@@ -94,6 +101,7 @@ class SM:
     sideset_count: int = 0
     side_base: int = 0
     side_latched: int = 0
+    crc: int = 0
 
     def load(self, words: list[int]) -> None:
         if len(self.imem) != IMEM_WORDS:
@@ -109,6 +117,7 @@ class SM:
         self.delay_ctr = 0
         self.div_down = 0
         self.frac_acc = 0
+        self.crc = 0
 
     def effective_pins(self, gpio_in: int) -> int:
         eff = 0
@@ -255,7 +264,38 @@ class SM:
                 if not self.rx.push(self.isr):
                     stall = True
         elif op == OP_MOV:
-            self._mov_dst(field, self._mov_src(payload, eff))
+            if payload == REG_XOR_Y:
+                if field == REG_X:
+                    cur = self.x
+                elif field == REG_Y:
+                    cur = self.y
+                elif field == REG_OSR:
+                    cur = self.osr
+                elif field == REG_ISR:
+                    cur = self.isr
+                elif field == REG_PINS:
+                    cur = self.out_reg
+                else:
+                    cur = 0
+                self._mov_dst(field, cur ^ self.y)
+            elif payload == REG_CRC_FEED:
+                b = self.osr & 1
+                msb = (self.crc >> 14) & 1
+                self.crc = ((self.crc << 1) & 0x7FFF)
+                if msb ^ b:
+                    self.crc ^= CRC15_POLY
+            elif payload == REG_CRC_LO:
+                self._mov_dst(field, self.crc & 0xFF)
+            elif payload == REG_CRC_HI:
+                self._mov_dst(field, (self.crc >> 8) & 0x7F)
+            elif payload == REG_CRC_CLR:
+                self.crc = 0
+            elif payload == REG_CRC_OUT:
+                bit = (self.crc >> 14) & 1
+                self.crc = (self.crc << 1) & 0x7FFF
+                self._mov_dst(field, bit)
+            else:
+                self._mov_dst(field, self._mov_src(payload, eff))
         elif op == OP_SET:
             if field == SET_PINS:
                 self.out_reg = (self.out_reg & ~0x1F) | (payload & 0x1F)

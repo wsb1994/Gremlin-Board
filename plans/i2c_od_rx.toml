@@ -1,5 +1,5 @@
 name = "i2c_od_rx"
-description = "Decode open-drain bytes between start and stop. SDA=pin0 SCL=pin1. Skip ACK clocks."
+description = "Decode open-drain 1-byte frames. SDA=pin0 SCL=pin1. Hunt START, 8 MSB, skip ACK, push, hunt STOP/next START."
 protocol = "i2c"
 direction = "decode"
 
@@ -60,4 +60,4 @@ function = "push"
 [[steps]]
 name = "again"
 function = "jmp"
-inputs = ["count"]
+inputs = ["wait_idle"]

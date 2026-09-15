@@ -27,6 +27,12 @@ from loom.isa import (
     REG_ISR,
     REG_NULL,
     REG_OSR,
+    REG_XOR_Y,
+    REG_CRC_CLR,
+    REG_CRC_FEED,
+    REG_CRC_HI,
+    REG_CRC_LO,
+    REG_CRC_OUT,
     REG_PINS,
     REG_X,
     REG_Y,
@@ -49,6 +55,12 @@ _REG = {
     "isr": REG_ISR,
     "pins": REG_PINS,
     "null": REG_NULL,
+    "xor_y": REG_XOR_Y,
+    "crc_feed": REG_CRC_FEED,
+    "crc_lo": REG_CRC_LO,
+    "crc_hi": REG_CRC_HI,
+    "crc_clr": REG_CRC_CLR,
+    "crc_out": REG_CRC_OUT,
 }
 
 
@@ -67,6 +79,7 @@ class Program:
     instrs: list[Instr] = field(default_factory=list)
     labels: dict[str, int] = field(default_factory=dict)
     sideset_count: int = 0
+    side_base: int = 0
     wrap_bottom: int = 0
     wrap_top: int = 31
 
@@ -131,6 +144,7 @@ def compile_plan(plan: Plan) -> Program:
     prog = Program(
         name=plan.name,
         sideset_count=plan.sideset_count,
+        side_base=plan.side_base,
         wrap_bottom=plan.wrap_bottom,
         wrap_top=plan.wrap_top,
     )

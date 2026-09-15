@@ -1,5 +1,5 @@
 name = "ps2_tx"
-description = "PS/2 host clocked byte. DATA=pin0 CLK=pin1, LSB first, idle high."
+description = "PS/2 host byte. DATA=pin0 CLK=pin1, LSB first, odd parity, ACK. Idle both 1."
 protocol = "ps2"
 direction = "encode"
 
@@ -16,6 +16,28 @@ inputs = ["3"]
 [[steps]]
 name = "pull_byte"
 function = "pull"
+
+[[steps]]
+name = "par_init"
+function = "set_y"
+inputs = ["1"]
+
+[[steps]]
+name = "start"
+function = "set_pins"
+inputs = ["2"]
+delay = 1
+
+[[steps]]
+name = "start_lo"
+function = "set_pins"
+inputs = ["0"]
+delay = 1
+
+[[steps]]
+name = "start_hi"
+function = "set_pins"
+inputs = ["2"]
 
 [[steps]]
 name = "count"
@@ -40,11 +62,97 @@ function = "set_bit"
 inputs = ["1"]
 
 [[steps]]
+name = "chk"
+function = "jmp_pin"
+inputs = ["flip"]
+
+[[steps]]
 name = "next_bit"
 function = "jmp_x_dec"
 inputs = ["data"]
 
 [[steps]]
+name = "par_load"
+function = "mov"
+inputs = ["osr", "y"]
+
+[[steps]]
+name = "par_out"
+function = "out_lsb"
+inputs = ["1"]
+delay = 1
+
+[[steps]]
+name = "par_lo"
+function = "clr_bit"
+inputs = ["1"]
+delay = 1
+
+[[steps]]
+name = "par_hi"
+function = "set_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "stop"
+function = "set_pins"
+inputs = ["3"]
+delay = 1
+
+[[steps]]
+name = "stop_lo"
+function = "set_pins"
+inputs = ["1"]
+delay = 1
+
+[[steps]]
+name = "stop_hi"
+function = "set_pins"
+inputs = ["3"]
+
+[[steps]]
+name = "ack"
+function = "set_pins"
+inputs = ["2"]
+delay = 1
+
+[[steps]]
+name = "ack_lo"
+function = "set_pins"
+inputs = ["0"]
+delay = 1
+
+[[steps]]
+name = "ack_hi"
+function = "set_pins"
+inputs = ["2"]
+
+[[steps]]
 name = "again"
 function = "jmp"
 inputs = ["pull_byte"]
+
+[[steps]]
+name = "flip"
+function = "jmp_y_eq0"
+inputs = ["y0"]
+
+[[steps]]
+name = "y1"
+function = "set_y"
+inputs = ["0"]
+
+[[steps]]
+name = "to_next"
+function = "jmp"
+inputs = ["next_bit"]
+
+[[steps]]
+name = "y0"
+function = "set_y"
+inputs = ["1"]
+
+[[steps]]
+name = "back"
+function = "jmp"
+inputs = ["next_bit"]

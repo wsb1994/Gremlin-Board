@@ -1,5 +1,5 @@
 name = "eth_tx"
-description = "Ethernet bit-layer subset: MII-like clock+data, MOSI=pin0 CLK=pin1. Not 10BASE-T magnetics."
+description = "IEEE 802.3 MAC framing on clock+data: seven 0x55 + 0xD5 SFD + payload. MOSI=pin0 CLK=pin1. Not 10BASE-T magnetics."
 protocol = "ethernet"
 direction = "encode"
 
@@ -16,6 +16,123 @@ inputs = ["3"]
 [[steps]]
 name = "pull_byte"
 function = "pull"
+
+[[steps]]
+name = "pre_count"
+function = "set_y"
+inputs = ["6"]
+
+[[steps]]
+name = "pre_byte"
+function = "set_x"
+inputs = ["3"]
+
+[[steps]]
+name = "pre_0"
+function = "clr_bit"
+inputs = ["0"]
+
+[[steps]]
+name = "pre_0_hi"
+function = "set_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "pre_0_lo"
+function = "clr_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "pre_1"
+function = "set_bit"
+inputs = ["0"]
+
+[[steps]]
+name = "pre_1_hi"
+function = "set_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "pre_1_lo"
+function = "clr_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "pre_next"
+function = "jmp_x_dec"
+inputs = ["pre_0"]
+
+[[steps]]
+name = "pre_more"
+function = "jmp_y_dec"
+inputs = ["pre_byte"]
+
+[[steps]]
+name = "sfd_d"
+function = "set_bit"
+inputs = ["0"]
+
+[[steps]]
+name = "sfd_1a_hi"
+function = "set_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "sfd_1a_lo"
+function = "clr_bit"
+inputs = ["1"]
+delay = 1
+
+[[steps]]
+name = "sfd_1b_hi"
+function = "set_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "sfd_1b_lo"
+function = "clr_bit"
+inputs = ["1"]
+delay = 1
+
+[[steps]]
+name = "sfd_n"
+function = "set_x"
+inputs = ["2"]
+
+[[steps]]
+name = "sfd_0"
+function = "clr_bit"
+inputs = ["0"]
+
+[[steps]]
+name = "sfd_0_hi"
+function = "set_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "sfd_0_lo"
+function = "clr_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "sfd_1"
+function = "set_bit"
+inputs = ["0"]
+
+[[steps]]
+name = "sfd_1_hi"
+function = "set_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "sfd_1_lo"
+function = "clr_bit"
+inputs = ["1"]
+
+[[steps]]
+name = "sfd_next"
+function = "jmp_x_dec"
+inputs = ["sfd_0"]
 
 [[steps]]
 name = "count"

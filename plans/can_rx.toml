@@ -1,7 +1,14 @@
 name = "can_rx"
-description = "CAN bit-layer subset: wait SOF dominant, sample 8 LSB bits. No bit stuffing/CRC."
+description = "CAN: wait SOF, destuff 5 identical either polarity, last on pin3, wait TX pin4 CRC-phase then next SOF."
 protocol = "can"
 direction = "decode"
+wrap_bottom = 27
+wrap_top = 26
+
+[[steps]]
+name = "drive"
+function = "set_pindirs"
+inputs = ["8"]
 
 [[steps]]
 name = "wait_sof"
@@ -9,9 +16,15 @@ function = "wait_pin"
 inputs = ["0", "0"]
 
 [[steps]]
-name = "to_first"
-function = "delay"
-delay = 10
+name = "sof_hi"
+function = "wait_pin"
+inputs = ["2", "1"]
+
+[[steps]]
+name = "stn"
+function = "set_y"
+inputs = ["3"]
+delay = 7
 
 [[steps]]
 name = "count"
@@ -19,21 +32,135 @@ function = "set_x"
 inputs = ["7"]
 
 [[steps]]
-name = "sample"
-function = "in_lsb"
-inputs = ["1"]
-delay = 6
+name = "in0"
+function = "set_inpin"
+inputs = ["0"]
 
 [[steps]]
-name = "next_bit"
+name = "bit_hi"
+function = "wait_pin"
+inputs = ["2", "1"]
+
+[[steps]]
+name = "is1"
+function = "jmp_pin"
+inputs = ["one"]
+
+[[steps]]
+name = "si3"
+function = "set_inpin"
+inputs = ["3"]
+
+[[steps]]
+name = "lz"
+function = "jmp_pin"
+inputs = ["chg"]
+
+[[steps]]
+name = "y0"
+function = "in_lsb"
+inputs = ["1"]
+
+[[steps]]
+name = "yd"
+function = "jmp_y_dec"
+inputs = ["blo"]
+
+[[steps]]
+name = "skip"
+function = "wait_pin"
+inputs = ["2", "0"]
+
+[[steps]]
+name = "skh"
+function = "wait_pin"
+inputs = ["2", "1"]
+
+[[steps]]
+name = "inv"
+function = "set_y"
+inputs = ["8"]
+
+[[steps]]
+name = "invm"
+function = "mov"
+inputs = ["pins", "xor_y"]
+
+[[steps]]
+name = "sy"
+function = "set_y"
+inputs = ["3"]
+
+[[steps]]
+name = "jb"
+function = "jmp"
+inputs = ["blo"]
+
+[[steps]]
+name = "one"
+function = "set_inpin"
+inputs = ["3"]
+
+[[steps]]
+name = "oj"
+function = "jmp_pin"
+inputs = ["y0"]
+
+[[steps]]
+name = "chg"
+function = "set_y"
+inputs = ["8"]
+
+[[steps]]
+name = "chgm"
+function = "mov"
+inputs = ["pins", "xor_y"]
+
+[[steps]]
+name = "chy"
+function = "set_y"
+inputs = ["3"]
+
+[[steps]]
+name = "cap"
+function = "in_lsb"
+inputs = ["1"]
+
+[[steps]]
+name = "blo"
+function = "wait_pin"
+inputs = ["2", "0"]
+
+[[steps]]
+name = "nxt"
 function = "jmp_x_dec"
-inputs = ["sample"]
+inputs = ["in0"]
 
 [[steps]]
 name = "store"
 function = "push"
 
 [[steps]]
-name = "again"
+name = "wp"
+function = "set_inpin"
+inputs = ["4"]
+
+[[steps]]
+name = "w1"
+function = "wait_pin"
+inputs = ["4", "1"]
+
+[[steps]]
+name = "w0"
+function = "wait_pin"
+inputs = ["4", "0"]
+
+[[steps]]
+name = "cll"
+function = "clr_bit"
+inputs = ["3"]
+
+[[steps]]
+name = "jw"
 function = "jmp"
 inputs = ["wait_sof"]

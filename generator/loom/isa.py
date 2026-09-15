@@ -69,6 +69,13 @@ REG_OSR = 2
 REG_ISR = 3
 REG_PINS = 4
 REG_NULL = 5
+REG_XOR_Y = 6  # MOV dest = dest ^ Y (payload 6)
+REG_CRC_FEED = 7  # feed OSR LSB into hidden CRC-15 (poly 0x4599)
+REG_CRC_LO = 8  # dest = crc[7:0]
+REG_CRC_HI = 9  # dest = crc[14:8]
+REG_CRC_CLR = 10  # crc = 0
+REG_CRC_OUT = 11  # dest = crc[14], crc <<= 1
+CRC15_POLY = 0x4599
 
 IMEM_WORDS = 32
 FIFO_DEPTH = 4

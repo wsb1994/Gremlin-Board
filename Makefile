@@ -15,6 +15,9 @@ test-exhaustive:  # every ISA encoding, interp vs emitted Verilog (iverilog)
 formal:  # k-induction: ISA step semantics + FIFO/halt invariants (yosys sat)
 	$(PYTHON) -m loom formal
 
+formal-proto:  # all 256 bytes × every protocol: TX encoding, RX spec, round-trip, loop
+	$(PYTHON) -m loom formal-proto
+
 verify: test-verilog test-exhaustive formal
 
 emit:

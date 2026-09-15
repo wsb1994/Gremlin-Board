@@ -1,17 +1,27 @@
 name = "usb_tx"
-description = "USB LS bit-layer subset: D+=pin0 8N1, D-=pin1 inverted idle. Not NRZI/packet."
+description = "USB LS: NRZI 0=toggle 1=hold, stuff after six 1s, SYNC KJKJKJKK, EOP SE0. D+=pin0 D-=pin1 clk=pin2."
 protocol = "usb"
 direction = "encode"
 
 [[steps]]
 name = "idle"
 function = "set_pins"
-inputs = ["1"]
+inputs = ["2"]
 
 [[steps]]
 name = "drive"
 function = "set_pindirs"
-inputs = ["3"]
+inputs = ["23"]
+
+[[steps]]
+name = "outpin"
+function = "set_outpin"
+inputs = ["4"]
+
+[[steps]]
+name = "inpin0"
+function = "set_inpin"
+inputs = ["0"]
 
 [[steps]]
 name = "pull_byte"
@@ -22,30 +32,138 @@ name = "count"
 function = "set_x"
 inputs = ["7"]
 
+# SYNC: 7 NRZI zeros (toggles from J) then hold K. Clock rise on pin2.
 [[steps]]
-name = "start"
+name = "sync_n"
+function = "set_y"
+inputs = ["6"]
+
+[[steps]]
+name = "stog"
+function = "jmp_pin"
+inputs = ["sj"]
+
+[[steps]]
+name = "sk"
+function = "set_pins"
+inputs = ["1"]
+
+[[steps]]
+name = "skj"
+function = "jmp"
+inputs = ["sclk"]
+
+[[steps]]
+name = "sj"
 function = "set_pins"
 inputs = ["2"]
+
+[[steps]]
+name = "sclk"
+function = "set_bit"
+inputs = ["2"]
 delay = 7
+
+[[steps]]
+name = "snxt"
+function = "jmp_y_dec"
+inputs = ["stog"]
+
+[[steps]]
+name = "shold"
+function = "set_pins"
+inputs = ["1"]
+
+[[steps]]
+name = "sholdc"
+function = "set_bit"
+inputs = ["2"]
+delay = 7
+
+[[steps]]
+name = "clklo"
+function = "clr_bit"
+inputs = ["2"]
+
+[[steps]]
+name = "inpin4"
+function = "set_inpin"
+inputs = ["4"]
+
+[[steps]]
+name = "stuff_n"
+function = "set_y"
+inputs = ["5"]
 
 [[steps]]
 name = "bit"
 function = "out_lsb"
 inputs = ["1"]
-delay = 6
 
 [[steps]]
-name = "next_bit"
+name = "is1"
+function = "jmp_pin"
+inputs = ["one"]
+
+[[steps]]
+name = "zero"
+function = "set_y"
+inputs = ["3"]
+
+[[steps]]
+name = "tog"
+function = "mov"
+inputs = ["pins", "xor_y"]
+
+[[steps]]
+name = "z6"
+function = "set_y"
+inputs = ["6"]
+
+[[steps]]
+name = "one"
+function = "set_bit"
+inputs = ["2"]
+delay = 7
+
+[[steps]]
+name = "cln"
+function = "clr_bit"
+inputs = ["2"]
+delay = 7
+
+[[steps]]
+name = "ones"
+function = "jmp_y_dec"
+inputs = ["nxt"]
+
+[[steps]]
+name = "stuff"
+function = "set_y"
+inputs = ["3"]
+
+[[steps]]
+name = "stog2"
+function = "mov"
+inputs = ["pins", "xor_y"]
+
+[[steps]]
+name = "s6"
+function = "set_y"
+inputs = ["6"]
+
+[[steps]]
+name = "spulse"
+function = "jmp"
+inputs = ["one"]
+
+[[steps]]
+name = "nxt"
 function = "jmp_x_dec"
 inputs = ["bit"]
 
 [[steps]]
-name = "stop"
+name = "eop"
 function = "set_pins"
-inputs = ["1"]
-delay = 7
-
-[[steps]]
-name = "again"
-function = "jmp"
-inputs = ["pull_byte"]
+inputs = ["0"]
+delay = 15

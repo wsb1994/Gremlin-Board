@@ -1,7 +1,17 @@
 name = "swd_rx"
-description = "Sample SWDIO on SWCLK rising, LSB first."
+description = "Skip 50 line-reset clocks then sample 8 LSB on SWCLK rise. Last 8 of 58 samples."
 protocol = "swd"
 direction = "decode"
+
+[[steps]]
+name = "skip_x"
+function = "set_x"
+inputs = ["28"]
+
+[[steps]]
+name = "skip_y"
+function = "set_y"
+inputs = ["28"]
 
 [[steps]]
 name = "wait_rise"
@@ -14,14 +24,9 @@ function = "in_lsb"
 inputs = ["1"]
 
 [[steps]]
-name = "wait_fall"
-function = "wait_pin"
-inputs = ["1", "0"]
-
-[[steps]]
-name = "count_init"
-function = "set_x"
-inputs = ["6"]
+name = "next_x"
+function = "jmp_x_dec"
+inputs = ["wait_rise"]
 
 [[steps]]
 name = "wait_rise2"
@@ -34,13 +39,8 @@ function = "in_lsb"
 inputs = ["1"]
 
 [[steps]]
-name = "wait_fall2"
-function = "wait_pin"
-inputs = ["1", "0"]
-
-[[steps]]
-name = "next"
-function = "jmp_x_dec"
+name = "next_y"
+function = "jmp_y_dec"
 inputs = ["wait_rise2"]
 
 [[steps]]
@@ -50,4 +50,4 @@ function = "push"
 [[steps]]
 name = "again"
 function = "jmp"
-inputs = ["wait_rise"]
+inputs = ["skip_x"]

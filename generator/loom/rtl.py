@@ -42,6 +42,13 @@ from loom.isa import (
     REG_OSR,
     REG_PINS,
     REG_X,
+    REG_XOR_Y,
+    REG_CRC_CLR,
+    REG_CRC_FEED,
+    REG_CRC_HI,
+    REG_CRC_LO,
+    REG_CRC_OUT,
+    CRC15_POLY,
     REG_Y,
     SET_BIT,
     SET_INPIN,
@@ -109,6 +116,7 @@ class GraphEngine(Elaboratable):
         side_bases = [Signal(3, name="side_base")]
         side_latcheds = [Signal(1, name="side_latched")]
         clk_ens = [Signal(name="clk_en")]
+        crcs = [Signal(15, name="crc")]
 
         if n == 1:
             out_regs = [self.gpio_out]
@@ -137,6 +145,7 @@ class GraphEngine(Elaboratable):
             side_bases.append(Signal(3, name=f"side_base{s}"))
             side_latcheds.append(Signal(1, name=f"side_latched{s}"))
             clk_ens.append(Signal(name=f"clk_en{s}"))
+            crcs.append(Signal(15, name=f"crc{s}"))
 
         if n > 1:
             m.d.comb += [
@@ -446,6 +455,21 @@ class GraphEngine(Elaboratable):
                             m.d.sync += rx_mem[rx_w].eq(isr)
                 with m.Case(OP_MOV):
                     srcv = Signal(8, name=f"movsrc{s}")
+                    dest_cur = Signal(8, name=f"movcur{s}")
+                    crc = crcs[s]
+                    with m.Switch(field):
+                        with m.Case(REG_X):
+                            m.d.comb += dest_cur.eq(x)
+                        with m.Case(REG_Y):
+                            m.d.comb += dest_cur.eq(y)
+                        with m.Case(REG_OSR):
+                            m.d.comb += dest_cur.eq(osr)
+                        with m.Case(REG_ISR):
+                            m.d.comb += dest_cur.eq(isr)
+                        with m.Case(REG_PINS):
+                            m.d.comb += dest_cur.eq(out_reg)
+                        with m.Default():
+                            m.d.comb += dest_cur.eq(0)
                     with m.Switch(payload):
                         with m.Case(REG_X):
                             m.d.comb += srcv.eq(x)
@@ -457,20 +481,52 @@ class GraphEngine(Elaboratable):
                             m.d.comb += srcv.eq(isr)
                         with m.Case(REG_PINS):
                             m.d.comb += srcv.eq(eff)
+                        with m.Case(REG_XOR_Y):
+                            m.d.comb += srcv.eq(dest_cur ^ y)
+                        with m.Case(REG_CRC_LO):
+                            m.d.comb += srcv.eq(crc[0:8])
+                        with m.Case(REG_CRC_HI):
+                            m.d.comb += srcv.eq(crc[8:15])
+                        with m.Case(REG_CRC_OUT):
+                            m.d.comb += srcv.eq(crc[14])
                         with m.Default():
                             m.d.comb += srcv.eq(0)
-                    with m.Switch(field):
-                        with m.Case(REG_X):
-                            m.d.sync += x.eq(srcv)
-                        with m.Case(REG_Y):
-                            m.d.sync += y.eq(srcv)
-                        with m.Case(REG_OSR):
-                            m.d.sync += osr.eq(srcv)
-                        with m.Case(REG_ISR):
-                            m.d.sync += isr.eq(srcv)
-                        with m.Case(REG_PINS):
-                            m.d.comb += pin_we.eq(1)
-                            m.d.comb += pin_wd.eq(srcv)
+                    with m.If(payload == REG_CRC_FEED):
+                        msb = crc[14]
+                        shifted = Cat(0, crc[0:14])
+                        with m.If(msb ^ osr[0]):
+                            m.d.sync += crc.eq(shifted ^ CRC15_POLY)
+                        with m.Else():
+                            m.d.sync += crc.eq(shifted)
+                    with m.Elif(payload == REG_CRC_CLR):
+                        m.d.sync += crc.eq(0)
+                    with m.Elif(payload == REG_CRC_OUT):
+                        m.d.sync += crc.eq(Cat(0, crc[0:14]))
+                        with m.Switch(field):
+                            with m.Case(REG_X):
+                                m.d.sync += x.eq(srcv)
+                            with m.Case(REG_Y):
+                                m.d.sync += y.eq(srcv)
+                            with m.Case(REG_OSR):
+                                m.d.sync += osr.eq(srcv)
+                            with m.Case(REG_ISR):
+                                m.d.sync += isr.eq(srcv)
+                            with m.Case(REG_PINS):
+                                m.d.comb += pin_we.eq(1)
+                                m.d.comb += pin_wd.eq(srcv)
+                    with m.Elif((payload != REG_CRC_FEED) & (payload != REG_CRC_CLR)):
+                        with m.Switch(field):
+                            with m.Case(REG_X):
+                                m.d.sync += x.eq(srcv)
+                            with m.Case(REG_Y):
+                                m.d.sync += y.eq(srcv)
+                            with m.Case(REG_OSR):
+                                m.d.sync += osr.eq(srcv)
+                            with m.Case(REG_ISR):
+                                m.d.sync += isr.eq(srcv)
+                            with m.Case(REG_PINS):
+                                m.d.comb += pin_we.eq(1)
+                                m.d.comb += pin_wd.eq(srcv)
                 with m.Case(OP_SET):
                     with m.Switch(field):
                         with m.Case(SET_PINS):

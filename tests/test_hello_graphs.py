@@ -52,14 +52,32 @@ def test_graph_roundtrip_through_memory_sd_usb():
 
 
 def test_hello_graphs_fit_onchip_working_set():
-    for name in (
-        "uart_tx.toml",
-        "uart_rx.toml",
-        "spi_tx.toml",
-        "spi_rx.toml",
-        "i2c_tx.toml",
-        "i2c_rx.toml",
-    ):
+    from loom.formal_proto import CASES
+
+    names = {c.tx for c in CASES} | {c.rx for c in CASES}
+    names.update(
+        (
+            "uart_tx.toml",
+            "uart_rx.toml",
+            "spi_tx.toml",
+            "spi_rx.toml",
+            "i2c_od_tx.toml",
+            "i2c_od_rx.toml",
+            "jtag_tx.toml",
+            "jtag_shift.toml",
+            "swd_tx.toml",
+            "swd_rx.toml",
+            "ps2_tx.toml",
+            "ps2_rx.toml",
+            "can_tx.toml",
+            "can_rx.toml",
+            "usb_tx.toml",
+            "usb_rx.toml",
+            "eth_tx.toml",
+            "eth_rx.toml",
+        )
+    )
+    for name in sorted(names):
         plan = load_plan(name)
         assert fits_onchip_imem(plan), (name, instruction_count(plan))
 

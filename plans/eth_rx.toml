@@ -1,7 +1,42 @@
 name = "eth_rx"
-description = "Ethernet bit-layer subset: sample data on MII-like clock rising. Not 10BASE-T magnetics."
+description = "IEEE 802.3 MAC framing on clock+data: skip preamble+SFD clocks, sample payload on CLK rising."
 protocol = "ethernet"
 direction = "decode"
+
+[[steps]]
+name = "skip_outer"
+function = "set_y"
+inputs = ["7"]
+
+[[steps]]
+name = "skip_count"
+function = "set_x"
+inputs = ["7"]
+
+[[steps]]
+name = "skip_rise"
+function = "wait_pin"
+inputs = ["1", "1"]
+
+[[steps]]
+name = "skip_fall"
+function = "wait_pin"
+inputs = ["1", "0"]
+
+[[steps]]
+name = "skip_next"
+function = "jmp_x_dec"
+inputs = ["skip_rise"]
+
+[[steps]]
+name = "skip_more"
+function = "jmp_y_dec"
+inputs = ["skip_count"]
+
+[[steps]]
+name = "count_init"
+function = "set_x"
+inputs = ["7"]
 
 [[steps]]
 name = "wait_rise"
@@ -19,29 +54,9 @@ function = "wait_pin"
 inputs = ["1", "0"]
 
 [[steps]]
-name = "count_init"
-function = "set_x"
-inputs = ["6"]
-
-[[steps]]
-name = "wait_rise2"
-function = "wait_pin"
-inputs = ["1", "1"]
-
-[[steps]]
-name = "sample2"
-function = "in_msb"
-inputs = ["1"]
-
-[[steps]]
-name = "wait_fall2"
-function = "wait_pin"
-inputs = ["1", "0"]
-
-[[steps]]
 name = "next"
 function = "jmp_x_dec"
-inputs = ["wait_rise2"]
+inputs = ["wait_rise"]
 
 [[steps]]
 name = "store"
@@ -50,4 +65,4 @@ function = "push"
 [[steps]]
 name = "again"
 function = "jmp"
-inputs = ["wait_rise"]
+inputs = ["skip_outer"]

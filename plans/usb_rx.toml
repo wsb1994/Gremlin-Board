@@ -1,39 +1,164 @@
 name = "usb_rx"
-description = "USB LS bit-layer subset: sample D+ (pin0) as 8N1. Not NRZI/packet."
+description = "USB LS: skip 8 SYNC clocks, NRZI-decode D+ vs prev on pin3, destuff after six 1s."
 protocol = "usb"
 direction = "decode"
 
 [[steps]]
-name = "wait_start"
-function = "wait_pin"
-inputs = ["0", "0"]
+name = "drive"
+function = "set_pindirs"
+inputs = ["8"]
 
 [[steps]]
-name = "to_first"
-function = "delay"
-delay = 10
-
-[[steps]]
-name = "count"
+name = "sync_n"
 function = "set_x"
 inputs = ["7"]
 
 [[steps]]
-name = "sample"
-function = "in_lsb"
-inputs = ["1"]
-delay = 6
+name = "sync_hi"
+function = "wait_pin"
+inputs = ["2", "1"]
 
 [[steps]]
-name = "next_bit"
+name = "sync_lo"
+function = "wait_pin"
+inputs = ["2", "0"]
+
+[[steps]]
+name = "sync_j"
 function = "jmp_x_dec"
-inputs = ["sample"]
+inputs = ["sync_hi"]
+
+[[steps]]
+name = "prevk"
+function = "set_bit"
+inputs = ["3"]
+
+[[steps]]
+name = "yn"
+function = "set_y"
+inputs = ["5"]
+
+[[steps]]
+name = "dn"
+function = "set_x"
+inputs = ["7"]
+
+[[steps]]
+name = "bit_hi"
+function = "wait_pin"
+inputs = ["2", "1"]
+
+[[steps]]
+name = "dp"
+function = "jmp_pin"
+inputs = ["i3b"]
+
+# D+=0
+[[steps]]
+name = "d0"
+function = "set_inpin"
+inputs = ["3"]
+
+[[steps]]
+name = "p1d0"
+function = "jmp_pin"
+inputs = ["b0"]
+
+[[steps]]
+name = "b1"
+function = "set_bit"
+inputs = ["3"]
+
+[[steps]]
+name = "jb1"
+function = "jmp"
+inputs = ["cap"]
+
+[[steps]]
+name = "i3b"
+function = "set_inpin"
+inputs = ["3"]
+
+[[steps]]
+name = "p1d1"
+function = "jmp_pin"
+inputs = ["b1"]
+
+[[steps]]
+name = "b0"
+function = "clr_bit"
+inputs = ["3"]
+
+[[steps]]
+name = "cap"
+function = "in_lsb"
+inputs = ["1"]
+
+[[steps]]
+name = "blo"
+function = "wait_pin"
+inputs = ["2", "0"]
+
+[[steps]]
+name = "jis1"
+function = "jmp_pin"
+inputs = ["is1"]
+
+[[steps]]
+name = "rz"
+function = "set_y"
+inputs = ["6"]
+
+[[steps]]
+name = "is1"
+function = "jmp_y_dec"
+inputs = ["savp"]
+
+[[steps]]
+name = "skh"
+function = "wait_pin"
+inputs = ["2", "1"]
+
+[[steps]]
+name = "skl"
+function = "wait_pin"
+inputs = ["2", "0"]
+
+[[steps]]
+name = "jrq"
+function = "jmp"
+inputs = ["rz"]
+
+[[steps]]
+name = "savp"
+function = "set_inpin"
+inputs = ["0"]
+
+[[steps]]
+name = "jp1"
+function = "jmp_pin"
+inputs = ["pp1"]
+
+[[steps]]
+name = "clp"
+function = "clr_bit"
+inputs = ["3"]
+
+[[steps]]
+name = "jn0"
+function = "jmp"
+inputs = ["nxt"]
+
+[[steps]]
+name = "pp1"
+function = "set_bit"
+inputs = ["3"]
+
+[[steps]]
+name = "nxt"
+function = "jmp_x_dec"
+inputs = ["bit_hi"]
 
 [[steps]]
 name = "store"
 function = "push"
-
-[[steps]]
-name = "again"
-function = "jmp"
-inputs = ["wait_start"]

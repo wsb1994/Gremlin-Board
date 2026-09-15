@@ -9,13 +9,12 @@ from loom.stream import load_graph, roundtrip
 PLANS = Path(__file__).resolve().parents[1] / "plans"
 HI = b"Hi"
 
-# Contest list: UART, SPI, I2C, JTAG, SWD, PS/2.
-# Stretch bit-layer subsets (not full PHYs): CAN (no stuffing/CRC), USB LS (D+ 8N1, not NRZI/packet),
-# Ethernet (MII-like clock+data, not 10BASE-T magnetics).
+# Contest list: UART, SPI, I2C, JTAG, SWD, PS/2, plus CAN/USB/Ethernet line codecs.
 PAIRS = (
     ("uart", "uart_tx.toml", "uart_rx.toml"),
+    ("uart_8n1", "uart_8n1_tx.toml", "uart_8n1_rx.toml"),
     ("spi", "spi_tx.toml", "spi_rx.toml"),
-    ("i2c", "i2c_tx.toml", "i2c_rx.toml"),
+    ("i2c", "i2c_od_tx.toml", "i2c_od_rx.toml"),
     ("jtag", "jtag_tx.toml", "jtag_shift.toml"),
     ("swd", "swd_tx.toml", "swd_rx.toml"),
     ("ps2", "ps2_tx.toml", "ps2_rx.toml"),
