@@ -330,6 +330,7 @@ class GraphEngine(Elaboratable):
                     side_count=side_counts[s],
                     side_base=side_bases[s],
                     side_latched=side_latcheds[s],
+                    crc=crcs[s],
                 )
         return m
 
@@ -363,6 +364,7 @@ class GraphEngine(Elaboratable):
         side_count,
         side_base,
         side_latched,
+        crc,
     ) -> None:
         op = instr[13:16]
         delay_field = instr[8:13]
@@ -456,7 +458,6 @@ class GraphEngine(Elaboratable):
                 with m.Case(OP_MOV):
                     srcv = Signal(8, name=f"movsrc{s}")
                     dest_cur = Signal(8, name=f"movcur{s}")
-                    crc = crcs[s]
                     with m.Switch(field):
                         with m.Case(REG_X):
                             m.d.comb += dest_cur.eq(x)
