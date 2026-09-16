@@ -1,5 +1,5 @@
 name = "spi_rx"
-description = "Mode-0 decode with CS. Wait CS low, sample MOSI on SCK rising, 8 MSB, wait CS high."
+description = "Mode-0 decode with CS. Wait CS low, sample MOSI on SCK rising, wait SCK fall, 8 MSB, wait CS high."
 protocol = "spi"
 direction = "decode"
 
@@ -22,6 +22,11 @@ inputs = ["1", "1"]
 name = "sample"
 function = "in_msb"
 inputs = ["1"]
+
+[[steps]]
+name = "wait_fall"
+function = "wait_pin"
+inputs = ["1", "0"]
 
 [[steps]]
 name = "next_bit"

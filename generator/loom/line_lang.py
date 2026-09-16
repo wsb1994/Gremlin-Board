@@ -75,8 +75,10 @@ def spi_spec_wave(byte: int) -> list[int]:
     wave = [0b100] * 4  # CS idle high
     wave += [0b000] * 2  # CS low, SCK low
     for bit in bits_msb(byte):
-        wave += [bit, bit | 0b010, bit]  # setup, SCK rise, SCK fall
-    wave += [0b000, 0b100, 0b100]
+        # 4 cycles: RX is wait_rise, sample, wait_fall, jmp
+        wave += [bit, bit | 0b010, bit, bit]
+    wave += [0b000] * 4  # CS low while RX pushes
+    wave += [0b100] * 4
     return wave
 
 
@@ -102,6 +104,58 @@ def spi_tx_matches(gpio: list[int], byte: int) -> None:
     for i in range(fall, rise):
         if cs[i] != 0:
             raise AssertionError("spi: CS not held low during bits")
+
+
+def spi_payload_from_tx(gpio: list[int]) -> bytes:
+    """Every CS-low window, MOSI sampled on SCK rise, MSB first."""
+    cs = [(t >> 2) & 1 for t in gpio]
+    mosi = [t & 1 for t in gpio]
+    sck = [(t >> 1) & 1 for t in gpio]
+    out: list[int] = []
+    i = 1
+    while i < len(cs):
+        if cs[i - 1] == 1 and cs[i] == 0:
+            fall = i
+            rise = next((j for j in range(fall + 1, len(cs)) if cs[j - 1] == 0 and cs[j] == 1), None)
+            if rise is None:
+                break
+            bits = _sample_rise(mosi[fall:rise], sck[fall:rise], prev=0)
+            out.append(pack_msb(bits))
+            i = rise + 1
+            continue
+        i += 1
+    return bytes(out)
+
+
+def i2c_slave_ack(gpio: list[int], oe: list[int]) -> list[int]:
+    """On the 9th SCL rise after START, if master released SDA, slave pulls ACK 0."""
+    sda = [t & 1 for t in gpio]
+    scl = [(t >> 1) & 1 for t in gpio]
+    start = None
+    for i in range(1, len(gpio)):
+        if scl[i] and scl[i - 1] and sda[i - 1] == 1 and sda[i] == 0:
+            start = i
+            break
+    if start is None:
+        return list(gpio)
+    rises: list[int] = []
+    prev = scl[start]
+    for i in range(start, len(gpio)):
+        if scl[i] and not prev:
+            rises.append(i)
+        prev = scl[i]
+        if len(rises) == 9:
+            break
+    if len(rises) < 9:
+        return list(gpio)
+    ack = rises[8]
+    out = list(gpio)
+    i = ack
+    while i < len(gpio) and scl[i]:
+        if (oe[i] & 1) == 0:
+            out[i] = out[i] & ~1
+        i += 1
+    return out
 
 
 # ---------------------------------------------------------------------------

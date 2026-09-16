@@ -1,11 +1,13 @@
 name = "i2c_od_tx"
-description = "Open-drain 1-byte pipe: START, 8 MSB, self-ACK 0, STOP, jmp pull. SDA=pin0 SCL=pin1. Drive 0 via OE."
+description = "Open-drain 1-byte pipe: START, 8 MSB, ACK slot (SDA released), stretch wait, STOP, jmp pull. SDA=pin0 SCL=pin1. Drive 0 via OE."
 protocol = "i2c"
 direction = "encode"
 
 # gpio_out stays 0 on SDA/SCL. Drive 0 = OE 1; release = OE 0 (pull-up).
 # Pin 2 is a scratch bit so jmp_pin can branch on the OSR MSB without driving SDA high.
-# Do not wait_pin on a released SDA/SCL: gpio_in=0 is not a pull-up.
+# wait_pin on released SCL needs a pull-up on gpio_in (0xFF in TX-only; the
+# slave model supplies 0 while stretching). ACK slot releases SDA so the slave
+# can pull ACK 0.
 
 [[steps]]
 name = "idle_out"
@@ -70,17 +72,21 @@ inputs = ["7"]
 name = "bit_zero_clk"
 function = "set_pindirs"
 inputs = ["5"]
-delay = 1
 
 [[steps]]
 name = "to_wait"
 function = "jmp"
-inputs = ["next_bit"]
+inputs = ["wait_scl"]
 
 [[steps]]
 name = "bit_one"
 function = "set_pindirs"
 inputs = ["4"]
+
+[[steps]]
+name = "wait_scl"
+function = "wait_pin"
+inputs = ["1", "1"]
 delay = 1
 
 [[steps]]
@@ -91,12 +97,17 @@ inputs = ["bit_prep"]
 [[steps]]
 name = "ack_prep"
 function = "set_pindirs"
-inputs = ["7"]
+inputs = ["6"]
 
 [[steps]]
 name = "ack_clk"
 function = "set_pindirs"
-inputs = ["5"]
+inputs = ["4"]
+
+[[steps]]
+name = "ack_wait"
+function = "wait_pin"
+inputs = ["1", "1"]
 delay = 1
 
 [[steps]]

@@ -163,17 +163,20 @@ def spi_wave(
     gap: tuple[int, int] = (4, 40),
     noise: bool = True,
 ) -> list[int]:
-    """Mode 0, MSB first. pin0 = MOSI, pin1 = SCK, idle low.
+    """Mode 0, MSB first. pin0 = MOSI, pin1 = SCK, pin2 = CS (active-low).
 
     Each SCK half period is drawn independently. MOSI changes on the falling
-    edge with a random hold (0..low-1). Between bytes MOSI toggles randomly if
-    noise=True; the decoder samples only on rising SCK so it must ignore it.
+    edge with a random hold (0..low-1). Between bytes CS is high and MOSI
+    toggles randomly if noise=True; the decoder waits CS low, samples only on
+    rising SCK, then waits CS high, so it must ignore inter-byte noise.
     """
     wave: list[int] = []
+    cs = 4  # pin 2 idle-high
 
     def idle(n: int):
         for _ in range(n):
-            wave.append(rng.getrandbits(1) if noise else 0)
+            mosi = rng.getrandbits(1) if noise else 0
+            wave.append(cs | mosi)  # CS=1, SCK=0
 
     idle(8)
     for byte in payload:
@@ -182,13 +185,13 @@ def spi_wave(
             bit = (byte >> i) & 1
             lo = rng.randint(*low)
             hold = rng.randint(0, lo - 1) if i != 7 else 0
-            # low half: old bit for `hold` cycles, then the new bit
+            # low half: old bit for `hold` cycles, then the new bit; CS=0
             for c in range(lo):
                 mosi = mosi if c < hold else bit
-                wave.append(mosi)  # SCK=0
+                wave.append(mosi)
             hi = rng.randint(*high)
-            wave.extend([2 | bit] * hi)  # SCK=1, MOSI stable
-        wave.append(bit)  # final falling edge
+            wave.extend([2 | bit] * hi)  # CS=0, SCK=1, MOSI stable
+        wave.append(bit)  # final falling edge, CS still low
         idle(rng.randint(*gap))
     idle(16)
     return wave

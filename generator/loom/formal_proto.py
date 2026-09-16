@@ -41,7 +41,7 @@ from loom.isa import (
     SHIFT_LSB,
     SHIFT_MSB,
 )
-from loom.line_lang import SPECS, bus_from_od
+from loom.line_lang import SPECS, bus_from_od, i2c_slave_ack
 from loom.stream import load_graph, roundtrip
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -234,7 +234,8 @@ def _tx_run(name: str, byte: int, cycles: int = 8000) -> Engine:
     eng.sm.side_base = plan.side_base
     eng.sm.tx.push(byte)
     eng.sm.run = True
-    eng.run_cycles(cycles)
+    # Pull-up on undriven pins so open-drain wait_pin (SCL=1) can retire.
+    eng.run_cycles(cycles, [0xFF] * cycles)
     return eng
 
 
@@ -308,7 +309,9 @@ def prove_tx_encoding(case: Case, bytes_: range = range(256)) -> None:
             if case.kind in SPECS:
                 gpio = eng.trace_out
                 if case.kind == "i2c":
-                    gpio = bus_from_od(eng.trace_out, eng.trace_oe)
+                    gpio = i2c_slave_ack(
+                        bus_from_od(eng.trace_out, eng.trace_oe), eng.trace_oe
+                    )
                 SPECS[case.kind][1](gpio, b)
             else:
                 tx_matches_spec(case.kind, eng.trace_out, b)

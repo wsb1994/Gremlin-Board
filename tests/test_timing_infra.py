@@ -9,6 +9,7 @@ from loom.correct import infer_uart_bit_cycles, uart_rx_plan
 from loom.interp import Engine
 from loom.ir import Plan
 from loom.stream import load_graph, roundtrip
+from loom.line_lang import spi_payload_from_tx, spi_tx_matches
 from loom.waves import ascii_bus
 
 from payloads import json_nbbo
@@ -64,6 +65,8 @@ def test_ascii_uart_expect():
 
 def test_ascii_spi_expect():
     tr = _tx_pins("spi_tx.toml", HELLO, 80)
+    assert spi_payload_from_tx(tr) == HELLO
+    spi_tx_matches(tr, HELLO[0])
     text = ascii_bus(
         {"MOSI": [t & 1 for t in tr], "SCK": [(t >> 1) & 1 for t in tr]},
         width=72,
@@ -109,9 +112,9 @@ def test_self_correct_foreign_bit_time():
 
 
 def test_jtag_idcode_model():
-    """Fourth protocol graph: same engine, JTAG-style TCK-sync sample."""
+    """Fourth protocol graph: JTAG TAP TX + Shift-DR sample, 32-bit IDCODE."""
     idcode = b"\x12\x34\x56\x78"
-    tx = load_graph(PLANS / "spi_tx.toml")
+    tx = load_graph(PLANS / "jtag_tx.toml")
     rx = load_graph(PLANS / "jtag_shift.toml")
     got, _ = roundtrip(tx, rx, idcode)
     assert got == idcode
