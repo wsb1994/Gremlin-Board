@@ -43,6 +43,7 @@
     "dir::macros/RM_IHPSG13_2P_256x16_c2_bm_bist_slow_1p08V_125C.lib",
     "dir::macros/RM_IHPSG13_2P_256x16_c2_bm_bist_fast_1p32V_m55C.lib"
   ],
+  "PDN_CFG": "dir::pdn_cfg.tcl",
   "PDN_MACRO_CONNECTIONS": [
     "engine.imem.imem_sram VPWR VGND VDD! VSS!",
     "engine.imem.imem_sram VPWR VGND VDDARRAY! VSS!"
@@ -61,6 +62,8 @@
   },
   "FP_MACRO_HORIZONTAL_HALO": 10,
   "FP_MACRO_VERTICAL_HALO": 10,
+  "PDN_HORIZONTAL_HALO": 0,
+  "PDN_VERTICAL_HALO": 0,
 
   "//": "Configuration docs: https://librelane.readthedocs.io/en/latest/reference/configuration.html",
 
