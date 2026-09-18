@@ -15,6 +15,7 @@ project:
   source_files:
     - "loom_engine.v"
     - "project.v"
+    - "macros/RM_IHPSG13_2P_256x16_c2_bm_bist.bb.v"
 
 pinout:
   ui[0]: "run"

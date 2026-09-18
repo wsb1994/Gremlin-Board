@@ -31,6 +31,22 @@
   "//": "https://tinytapeout.com/faq/#how-can-i-map-an-additional-external-clock-to-one-of-the-gpios",
   "CLOCK_PORT": "clk",
 
+  "//": "IHP 2-port SRAM. CI regenerates user_config.json; keep hard-macro views here. The .bb.v stub is listed in info.yaml source_files so Verilator lint sees it.",
+  "EXTRA_LEFS": [
+    "dir::macros/RM_IHPSG13_2P_256x16_c2_bm_bist.lef"
+  ],
+  "EXTRA_GDS_FILES": [
+    "dir::macros/RM_IHPSG13_2P_256x16_c2_bm_bist.gds"
+  ],
+  "EXTRA_LIBS": [
+    "dir::macros/RM_IHPSG13_2P_256x16_c2_bm_bist_typ_1p20V_25C.lib",
+    "dir::macros/RM_IHPSG13_2P_256x16_c2_bm_bist_slow_1p08V_125C.lib",
+    "dir::macros/RM_IHPSG13_2P_256x16_c2_bm_bist_fast_1p32V_m55C.lib"
+  ],
+  "FP_PDN_MACRO_HOOKS": "engine.imem.imem_sram VDD VPWR VSS VGND, engine.imem.imem_sram VDDARRAY VPWR VSS VGND, imem.imem_sram VDD VPWR VSS VGND, imem.imem_sram VDDARRAY VPWR VSS VGND, imem_sram VDD VPWR VSS VGND, imem_sram VDDARRAY VPWR VSS VGND",
+  "FP_MACRO_HORIZONTAL_HALO": 10,
+  "FP_MACRO_VERTICAL_HALO": 10,
+
   "//": "Configuration docs: https://librelane.readthedocs.io/en/latest/reference/configuration.html",
 
   "//": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
