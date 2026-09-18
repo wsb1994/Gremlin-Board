@@ -184,8 +184,25 @@ if { $::env(PDN_CORE_RING) == 1 } {
 }
 
 # Tiny Tapeout CMOS5L PDN is Metal4 straps + Metal1 rails. The SRAM LEF
-# obstructs most of Metal4, so a Metal4-only macro grid is empty (PDN-0232).
-# Strap TopMetal1 over the macro and via down onto the Metal4 PG pins.
+# obstructs most of Metal4 and its VDDARRAY! pins do not reach the macro edge,
+# so run TopMetal1 straps across the core over the SRAM band. They must belong
+# to the core grid (tied to every Metal4 strap): a TopMetal1 island over the
+# macro alone leaves the rest of the grid unreachable for PSM (PSM-0069).
+# Offsets put VPWR over VDD! (lower 47um) and twice over VDDARRAY! (upper part).
+add_pdn_stripe \
+    -grid stdcell_grid \
+    -layer $::env(PDN_HORIZONTAL_LAYER) \
+    -width $::env(PDN_HWIDTH) \
+    -pitch 50 \
+    -offset 571 \
+    -spacing $::env(PDN_HSPACING) \
+    -number_of_straps 3 \
+    -starts_with POWER
+
+add_pdn_connect \
+    -grid stdcell_grid \
+    -layers "$::env(PDN_VERTICAL_LAYER) $::env(PDN_HORIZONTAL_LAYER)"
+
 define_pdn_grid \
     -macro \
     -cells RM_IHPSG13_2P_256x16_c2_bm_bist \
@@ -195,16 +212,6 @@ define_pdn_grid \
     -grid_over_boundary \
     -voltage_domains CORE
 
-add_pdn_stripe \
-    -grid sram \
-    -layer $::env(PDN_HORIZONTAL_LAYER) \
-    -width $::env(PDN_HWIDTH) \
-    -pitch $::env(PDN_HPITCH) \
-    -offset $::env(PDN_HOFFSET) \
-    -starts_with POWER \
-    -extend_to_boundary
-
 add_pdn_connect \
     -grid sram \
     -layers "$::env(PDN_VERTICAL_LAYER) $::env(PDN_HORIZONTAL_LAYER)"
-
