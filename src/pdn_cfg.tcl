@@ -183,16 +183,28 @@ if { $::env(PDN_CORE_RING) == 1 } {
     }
 }
 
-# Tiny Tapeout CMOS5L runs PDN_MULTILAYER=0 (Metal4 straps + Metal1 rails,
-# no TopMetal1). The stock macro recipe vias Metal4 to TopMetal1 and leaves
-# an empty grid (PDN-0232). The IHP 2P SRAM already has Metal4 PG pins;
-# import those as the grid so they meet the stdcell Metal4 straps.
+# Tiny Tapeout CMOS5L PDN is Metal4 straps + Metal1 rails. The SRAM LEF
+# obstructs most of Metal4, so a Metal4-only macro grid is empty (PDN-0232).
+# Strap TopMetal1 over the macro and via down onto the Metal4 PG pins.
 define_pdn_grid \
     -macro \
     -cells RM_IHPSG13_2P_256x16_c2_bm_bist \
     -name sram \
     -starts_with POWER \
     -halo "0 0" \
-    -grid_over_pg_pins \
-    -voltage_domain CORE
+    -grid_over_boundary \
+    -voltage_domains CORE
+
+add_pdn_stripe \
+    -grid sram \
+    -layer $::env(PDN_HORIZONTAL_LAYER) \
+    -width $::env(PDN_HWIDTH) \
+    -pitch $::env(PDN_HPITCH) \
+    -offset $::env(PDN_HOFFSET) \
+    -starts_with POWER \
+    -extend_to_boundary
+
+add_pdn_connect \
+    -grid sram \
+    -layers "$::env(PDN_VERTICAL_LAYER) $::env(PDN_HORIZONTAL_LAYER)"
 
