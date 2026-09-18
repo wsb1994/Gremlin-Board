@@ -213,6 +213,10 @@ def _iverilog(args: list[str]) -> str:
 def test_verilog_isa_exhaustive():
     n = _write_vectors()
     assert n == 8 * 8 * 32 * 7
-    out = _iverilog(["src/loom_engine.v", "test/gen/tb_isa_exhaustive.v"])
+    out = _iverilog([
+        "src/loom_engine.v",
+        "src/macros/RM_IHPSG13_2P_256x16_c2_bm_bist.v",
+        "test/gen/tb_isa_exhaustive.v",
+    ])
     lines = [l for l in out.splitlines() if l.startswith(("PASS", "FAIL", "MISMATCH"))]
     assert lines and lines[-1].startswith("PASS"), "\n".join(lines[:25])

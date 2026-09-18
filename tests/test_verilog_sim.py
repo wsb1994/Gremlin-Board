@@ -18,6 +18,7 @@ from test_all_protocols import PAIRS, HI as PROTO_HI
 ROOT = Path(__file__).resolve().parents[1]
 PLANS = ROOT / "plans"
 GEN = ROOT / "test" / "gen"
+SRAM = ROOT / "src" / "macros" / "RM_IHPSG13_2P_256x16_c2_bm_bist.v"
 
 
 def _csr(path: Path) -> tuple[int, int, int, int]:
@@ -149,6 +150,7 @@ def _run_vvp(tb_path: Path) -> str:
             "-o",
             str(out),
             str(engine),
+            str(SRAM),
             str(tb_path),
         ]
         subprocess.run(cmd, check=True, capture_output=True, text=True)
@@ -159,7 +161,7 @@ def _run_vvp(tb_path: Path) -> str:
     script = (
         "export DEBIAN_FRONTEND=noninteractive; "
         "apt-get update -qq && apt-get install -y -qq iverilog >/tmp/apt.log && "
-        f"iverilog -g2012 -o /tmp/sim {work}/src/loom_engine.v {work}/{tb_path.relative_to(ROOT)} && "
+        f"iverilog -g2012 -o /tmp/sim {work}/src/loom_engine.v {work}/src/macros/RM_IHPSG13_2P_256x16_c2_bm_bist.v {work}/{tb_path.relative_to(ROOT)} && "
         "vvp /tmp/sim"
     )
     r = subprocess.run(
