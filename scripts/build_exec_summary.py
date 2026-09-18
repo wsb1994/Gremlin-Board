@@ -451,9 +451,9 @@ def build():
         ),
         (
             "Formal methods",
-            "Yosys sat k-induction of ISA one-step semantics + FIFO/halt/imem (54 named "
-            "assertions). Log: Induction step proven: SUCCESS! (test/gen/formal.log). "
-            "Harness is GraphEngine() default: 1 SM, 1 slot, clkdiv=1, wrap 0..31, sideset off.",
+            "Yosys sat k-induction: 1-SM ISA + CRC MOV 7–11 + host CSR writes; ClockedImem; "
+            "2-SM next_pc fetch + SM0/SM1 CSR writes. Log: Induction step proven: SUCCESS! "
+            "(test/gen/formal.log). Does not prove a protocol waveform on RTL.",
             "Yes — ISA, not protocols",
         ),
         (
@@ -471,8 +471,8 @@ def build():
         ),
         (
             "Area: 6×4 tiles (~0.7 mm², ~1k cells/tile ≈ 24k cell budget)",
-            "Closed GDS (1 SM): 3,499 cells, 56,492 µm². Current 2-SM synth: 14,944 cells, "
-            "233,174 µm². Both under the 6×4 budget. Imem is stdcell FFs, not SRAM.",
+            "Closed GDS (1 SM): 3,499 cells, 56,492 µm². Current 2-SM loom_chip instantiates "
+            "IHP RM_IHPSG13_2P_256x16_c2_bm_bist for imem. 2-SM+SRAM P&amp;R not closed.",
             "Yes — under budget",
         ),
         (
@@ -518,10 +518,9 @@ def build():
     ))
     story.append(
         P(
-            "k-induction, iverilog protocol tests, and the exhaustive ISA sweep all target "
-            "GraphEngine() / loom_engine (1 SM, 1 slot). Dual-SM behaviour is covered by "
-            "unit tests in tests/test_dual_sm.py (interpreter and Amaranth), not by the GDS "
-            "and not by the k-induction harness.",
+            "k-induction now includes 2-SM fetch and CSR writes (formal_chip). iverilog protocol "
+            "Hi tests still target loom_engine (1 SM). Dual-SM UART+SPI on disjoint pins is "
+            "tests/test_infra_desk.py T7. Closed GDS remains the 1-SM engine.",
             st["body"],
         )
     )

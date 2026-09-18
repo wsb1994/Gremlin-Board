@@ -2,7 +2,7 @@
 
 A reprogrammable pin/time engine for the [Jane Street protocol-emulator ASIC competition](https://blog.janestreet.com/protocol-emulator-asic-competition/), targeting Tiny Tapeout on IHP CMOS5L (6×4 tiles, 50 MHz).
 
-The silicon implements one small ISA: `pin`, `wait`, `delay`, `shift`, `fifo`, `jump`, `mov`. Protocols are not hardwired blocks. They are graphs (`plans/*.toml`) compiled to 32-word programs and written into instruction memory over the Tiny Tapeout pins after tapeout. The die holds four 32-word graph slots and two state machines.
+The silicon implements one small ISA: `pin`, `wait`, `delay`, `shift`, `fifo`, `jump`, `mov`. Protocols are not hardwired blocks. They are graphs (`plans/*.toml`) compiled to 32-word programs and written into instruction memory over the Tiny Tapeout pins after tapeout. The die holds four 32-word graph slots and two state machines, each with its own FIFO. Host can refill TX / pop RX while GPIO is live (nibble path on `ui_in`).
 
 Everything below is stated as tested, simulated, synthesised, or not done. Nothing here has run on silicon or on an FPGA.
 
@@ -10,11 +10,11 @@ Everything below is stated as tested, simulated, synthesised, or not done. Nothi
 
 | Item | State |
 |---|---|
-| GDS on CMOS5L, 6×4, current source (`loom_chip`, 2 SM, 4 slots) | Closed in CI at commit `f552ddc`: 23,057 std cells, 36% utilisation, Magic DRC 0, LVS clean, antenna 0. Tiny Tapeout precheck and gate-level test pass. |
-| Timing at 50 MHz | Setup worst slack **+0.18 ns** at the slow corner (1.08 V, 125 °C), +7.47 ns typical, +10.2 ns fast. Hold +0.13 ns. 77 max-slew and 179 max-fanout warnings at the slow corner. The margin is thin. |
+| GDS on CMOS5L, 6×4 | Closed **1-SM / 1-slot** GDS (`tt_submission`): 3,499 cells, 8% util, Magic DRC 0, LVS clean, slow setup **+8.99 ns**. Current source is **2 SM / 4 slots**; `loom_chip` instantiates IHP `RM_IHPSG13_2P_256x16_c2_bm_bist` (Python tests keep a 1-cycle Array model). A previous combo-FF 2-SM P&R died in detailed routing (clk fanout 2413). |
+| Timing at 50 MHz | 1-SM closed part: slow setup +8.99 ns, hold +0.12 ns. 2-SM fetch is registered (`next_pc` ADDR). `clkdiv=0` is a 65536-cycle period. |
 | Protocol graphs | UART (hello + 8N1), SPI mode 0 + CS, I2C open-drain, JTAG TMS TAP, SWD, PS/2, CAN, USB low-speed, Ethernet framing. All fit in 32 words. |
 | Exhaustive protocol check | Every byte 0..255 on all 10 TX/RX pairs, on the Python interpreter, against independent spec languages (`loom formal-proto`). |
-| ISA formal | k-induction (yosys `sat -tempinduct`, 12 steps) over 54 named assertions on the 1-SM `loom_engine` RTL. Passes. |
+| ISA formal | k-induction (yosys `sat -tempinduct`, 12 steps) on 1-SM ISA + CRC MOV 7–11 + host CSR writes; ClockedImem contract; 2-SM fetch + SM0/SM1 CSR writes. Passes. |
 | Interpreter vs generated Verilog | All 2048 ISA encodings × 7 stimuli under iverilog. Passes. |
 | Gate-level | Tiny Tapeout `gl_test` on the CI netlist checks reset and idle status only. No protocol traffic is simulated at gate level. |
 | FPGA / hardware | Not done. |
@@ -39,7 +39,7 @@ Each graph is a byte-level line codec, not a full standard. USB, CAN and Etherne
 ## What is verified, and where
 
 - **Protocol completeness (interpreter):** for each of the 10 pairs and every byte `b`: TX(`b`) is in the spec language, RX(spec(`b`)) = `b`, RX(TX(`b`)) = `b`, and the state machine returns to its pull. `generator/loom/formal_proto.py`, `tests/test_formal_proto.py`. This is exhaustive model checking of a finite alphabet on the interpreter. It is not a proof about the RTL.
-- **ISA k-induction (RTL):** one-step semantics of all 8 opcodes plus FIFO occupancy, halt freezes the SM, run blocks imem writes. Harness is `loom_engine` with default CSRs (1 SM, clkdiv 1, wrap 0..31, no sideset). MOV payloads 7–11 (the CRC helper) are not constrained by the proof. `generator/loom/formal.py`, log in `test/gen/formal.log`.
+- **ISA k-induction (RTL):** one-step semantics of all 8 opcodes plus FIFO occupancy, halt freezes the SM, run blocks imem writes, CRC MOV 7–11, host CSR writes (`csr_we` is a free input). Separate harnesses prove ClockedImem DOUT and 2-SM `next_pc` fetch plus SM0/SM1 CSR writes. `generator/loom/formal.py`, log in `test/gen/formal.log`.
 - **Interpreter ≡ Verilog:** every ISA encoding, golden from the interpreter, checked on `src/loom_engine.v` under iverilog. `tests/test_verilog_isa_exhaustive.py`.
 - **Interpreter ≡ Amaranth RTL:** UART/SPI/I2C hello traces and opcode tests. `tests/test_rtl.py`, `tests/test_rtl_stream.py`, `tests/test_prod_engine.py`, `tests/test_dual_sm.py`.
 - **Verilog protocol round-trips:** every pair sends `Hi` through the generated Verilog under iverilog; UART/SPI/I2C also carry three longer payloads. `tests/test_verilog_sim.py`.
@@ -48,7 +48,7 @@ Each graph is a byte-level line codec, not a full standard. USB, CAN and Etherne
 - **Host load:** two-phase imem write, TX push, run, on the engine ports and a cycle model of the wrapper. `tests/test_host_load.py`.
 - **ASCII waveform expect tests:** `tests/test_timing_infra.py`, `tests/expect/`.
 
-Not verified: any protocol waveform on the gate-level netlist, any transfer against a real peer device, the 2-SM `loom_chip` under k-induction (the proof covers the 1-SM engine it instantiates).
+Not verified: protocol traffic on the **gate-level** netlist (cocotb RTL wrapper now loads UART TX and checks a start bit), any transfer against a real peer device, FPGA bring-up.
 
 ## Area and timing
 
@@ -56,13 +56,13 @@ Numbers from the CI GDS run on commit `f552ddc` (`tt_submission` artifact, `stat
 
 | Metric | Value |
 |---|---|
-| Std cells | 23,057 |
-| Std cell area | 325,609 µm² of 902,417 µm² core (36%) |
-| Setup slack, slow / typ / fast | +0.18 / +7.47 / +10.2 ns |
-| Hold slack, worst | +0.13 ns |
+| Std cells (1-SM closed GDS) | 3,499 |
+| Std cell area | 56,492 µm² of 902,417 µm² core (8%) |
+| Setup slack, slow / typ / fast | +8.99 / +7.47 / +11.4 ns (see `tt_submission/stats/metrics.csv`) |
+| Hold slack, worst | +0.12 ns |
 | Magic DRC / LVS / antenna | 0 / clean / 0 |
 
-`estimates/synth.txt` is a generic Yosys estimate from an earlier revision and is not the number above. Instruction memory is standard-cell flip-flops; an SRAM plan is in `docs/SRAM-IMEM-PLAN.md` and is not implemented.
+`estimates/synth.txt` is a generic Yosys estimate from an earlier revision and is not a P&R number. `loom_chip` instantiates IHP `RM_IHPSG13_2P_256x16_c2_bm_bist` (`src/macros/`, `docs/SRAM-IMEM-PLAN.md`). The submitted GDS is still the 1-SM engine until a 2-SM+SRAM run closes.
 
 ## Install and run
 
@@ -107,6 +107,6 @@ docs/CRITERIA.md   contest checklist
 - FPGA smoke test.
 - Protocol traffic on the gate-level netlist.
 - Any test against real hardware.
-- Timing margin at the slow corner is 0.18 ns; no retiming or clock-period relaxation has been attempted.
+- 2-SM + SRAM GDS (P&R of current `loom_chip`). The closed artifact is 1-SM.
 
 License: Apache-2.0.

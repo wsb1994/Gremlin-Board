@@ -6,7 +6,7 @@ SIM ?= icarus
 FST ?= -fst # Use more efficient FST format
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = loom_engine.v project.v
+PROJECT_SOURCES = loom_engine.v project.v macros/RM_IHPSG13_2P_256x16_c2_bm_bist.v
 
 ifneq ($(GATES),yes)
 

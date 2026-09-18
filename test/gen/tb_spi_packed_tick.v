@@ -4,54 +4,60 @@ module tb;
   always #10 clk = ~clk;
 
   reg tx_run=0, rx_run=0;
-  reg tx_we=0, rx_re=0, tx_imem_we=0, rx_imem_we=0;
-  reg [4:0] tx_waddr=0, rx_waddr=0;
+  reg tx_we=0, rx_re=0, tx_imem_we=0, rx_imem_we=0, tx_csr_we=0, rx_csr_we=0;
+  reg [4:0] tx_waddr=0, rx_waddr=0, tx_csr_addr=0, rx_csr_addr=0;
   reg [15:0] tx_wdata=0, rx_wdata=0;
-  reg [7:0] tx_byte=0;
+  reg [7:0] tx_byte=0, tx_csr_wdata=0, rx_csr_wdata=0;
   wire [7:0] tx_out, tx_oe, rx_out, rx_oe, tx_rxdata, rx_rxdata;
   wire tx_full, rx_full, tx_empty, rx_empty;
   wire [4:0] tx_pc, rx_pc;
+  // Wired-AND pad with pull-up: drive-0 wins, undriven bits are 1. Matches
+  // open-drain I2C/SWD and push-pull UART/SPI (OE+out=1 → pad 1).
+  wire [7:0] bus = ~((tx_oe & ~tx_out) | (rx_oe & ~rx_out));
 
   loom_engine tx (
     .clk(clk), .rst(rst), .run(tx_run),
-    .gpio_in(8'h00), .gpio_out(tx_out), .gpio_oe(tx_oe),
+    .gpio_in(bus), .gpio_out(tx_out), .gpio_oe(tx_oe),
     .imem_we(tx_imem_we), .imem_waddr(tx_waddr), .imem_wdata(tx_wdata),
+    .imem_slot(2'b00), .sm_sel(1'b0), .csr_we(tx_csr_we), .csr_addr(tx_csr_addr), .csr_wdata(tx_csr_wdata),
     .tx_we(tx_we), .tx_data(tx_byte), .tx_full(tx_full),
     .rx_re(1'b0), .rx_data(tx_rxdata), .rx_empty(tx_empty), .pc(tx_pc)
   );
   loom_engine rx (
     .clk(clk), .rst(rst), .run(rx_run),
-    .gpio_in(tx_out), .gpio_out(rx_out), .gpio_oe(rx_oe),
+    .gpio_in(bus), .gpio_out(rx_out), .gpio_oe(rx_oe),
     .imem_we(rx_imem_we), .imem_waddr(rx_waddr), .imem_wdata(rx_wdata),
+    .imem_slot(2'b00), .sm_sel(1'b0), .csr_we(rx_csr_we), .csr_addr(rx_csr_addr), .csr_wdata(rx_csr_wdata),
     .tx_we(1'b0), .tx_data(8'h00), .tx_full(rx_full),
     .rx_re(rx_re), .rx_data(rx_rxdata), .rx_empty(rx_empty), .pc(rx_pc)
   );
 
-  reg [15:0] TXW [0:8];
+  reg [15:0] TXW [0:10];
   initial begin
-    TXW[0] = 16'hc000;
-    TXW[1] = 16'hc023;
+    TXW[0] = 16'hc004;
+    TXW[1] = 16'hc027;
     TXW[2] = 16'h8020;
-    TXW[3] = 16'hc047;
-    TXW[4] = 16'h6021;
-    TXW[5] = 16'hc081;
-    TXW[6] = 16'hc0a1;
-    TXW[7] = 16'h0064;
-    TXW[8] = 16'h0002;
+    TXW[3] = 16'hc0a2;
+    TXW[4] = 16'hc047;
+    TXW[5] = 16'h6021;
+    TXW[6] = 16'hc081;
+    TXW[7] = 16'hc0a1;
+    TXW[8] = 16'h0065;
+    TXW[9] = 16'hc004;
+    TXW[10] = 16'h0002;
   end
 
-  reg [15:0] RXW [0:9];
+  reg [15:0] RXW [0:8];
   initial begin
-    RXW[0] = 16'h2011;
-    RXW[1] = 16'h4021;
-    RXW[2] = 16'h2001;
-    RXW[3] = 16'hc046;
-    RXW[4] = 16'h2011;
-    RXW[5] = 16'h4021;
-    RXW[6] = 16'h2001;
-    RXW[7] = 16'h0064;
-    RXW[8] = 16'h8000;
-    RXW[9] = 16'h0000;
+    RXW[0] = 16'h2002;
+    RXW[1] = 16'hc047;
+    RXW[2] = 16'h2011;
+    RXW[3] = 16'h4021;
+    RXW[4] = 16'h2001;
+    RXW[5] = 16'h0062;
+    RXW[6] = 16'h8000;
+    RXW[7] = 16'h2012;
+    RXW[8] = 16'h0000;
   end
 
   reg [7:0] PAY [0:23];
@@ -85,20 +91,28 @@ module tb;
   integer i, ngot, src, idle, pop, lim;
   reg [7:0] got [0:24];
   initial begin
-    lim = 64 + 24 * 120;
+    lim = 256 + 24 * 400;
     ngot = 0; src = 0; idle = 0; pop = 0;
     repeat (4) @(posedge clk);
     rst = 0;
-    for (i = 0; i < 9; i = i + 1) begin
+    for (i = 0; i < 11; i = i + 1) begin
       @(posedge clk);
       tx_imem_we = 1; tx_waddr = i[4:0]; tx_wdata = TXW[i];
     end
     @(posedge clk); tx_imem_we = 0;
-    for (i = 0; i < 10; i = i + 1) begin
+    for (i = 0; i < 9; i = i + 1) begin
       @(posedge clk);
       rx_imem_we = 1; rx_waddr = i[4:0]; rx_wdata = RXW[i];
     end
     @(posedge clk); rx_imem_we = 0;
+    @(posedge clk); tx_csr_we = 1; tx_csr_addr = 6; tx_csr_wdata = 8'h00;
+    @(posedge clk); tx_csr_addr = 7; tx_csr_wdata = 8'h1f;
+    @(posedge clk); tx_csr_addr = 8; tx_csr_wdata = 8'h00;
+    @(posedge clk); tx_csr_we = 0;
+    @(posedge clk); rx_csr_we = 1; rx_csr_addr = 6; rx_csr_wdata = 8'h00;
+    @(posedge clk); rx_csr_addr = 7; rx_csr_wdata = 8'h1f;
+    @(posedge clk); rx_csr_addr = 8; rx_csr_wdata = 8'h00;
+    @(posedge clk); rx_csr_we = 0;
     tx_run = 1; rx_run = 1;
     for (i = 0; i < lim; i = i + 1) begin
       @(negedge clk);

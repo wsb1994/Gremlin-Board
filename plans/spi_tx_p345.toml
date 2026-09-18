@@ -1,0 +1,63 @@
+name = "spi_tx_p345"
+description = "Mode-0 encode on MOSI=pin3 SCK=pin4 CS=pin5 so SM0 can UART on pin0 at the same time."
+protocol = "spi"
+direction = "encode"
+
+[[steps]]
+name = "dirs"
+function = "set_pindirs"
+inputs = ["24"]
+
+[[steps]]
+name = "cs_hi"
+function = "set_bit"
+inputs = ["5"]
+
+[[steps]]
+name = "outpin"
+function = "set_outpin"
+inputs = ["3"]
+
+[[steps]]
+name = "pull_byte"
+function = "pull"
+
+[[steps]]
+name = "cs_lo"
+function = "clr_bit"
+inputs = ["5"]
+
+[[steps]]
+name = "count"
+function = "set_x"
+inputs = ["7"]
+
+[[steps]]
+name = "data"
+function = "out_msb"
+inputs = ["1"]
+
+[[steps]]
+name = "sck_hi"
+function = "set_bit"
+inputs = ["4"]
+
+[[steps]]
+name = "sck_lo"
+function = "clr_bit"
+inputs = ["4"]
+
+[[steps]]
+name = "next_bit"
+function = "jmp_x_dec"
+inputs = ["data"]
+
+[[steps]]
+name = "cs_up"
+function = "set_bit"
+inputs = ["5"]
+
+[[steps]]
+name = "again"
+function = "jmp"
+inputs = ["pull_byte"]

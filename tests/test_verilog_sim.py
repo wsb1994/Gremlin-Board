@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from loom.emit import emit
+from loom.ir import Plan
 from loom.stream import load_graph
 
 from payloads import PAYLOADS, PROTOCOLS
@@ -19,7 +20,12 @@ PLANS = ROOT / "plans"
 GEN = ROOT / "test" / "gen"
 
 
-def _tb(tx_words, rx_words, payload: bytes) -> str:
+def _csr(path: Path) -> tuple[int, int, int, int]:
+    p = Plan.from_toml(path)
+    return p.wrap_bottom, p.wrap_top, p.sideset_count, p.side_base
+
+
+def _tb(tx_words, rx_words, payload: bytes, tx_csr=None, rx_csr=None) -> str:
     def arr16(name, words):
         body = ", ".join(f"16'h{w:04x}" for w in words)
         return f"  reg [15:0] {name} [0:{len(words)-1}];\n  initial begin\n" + "".join(
@@ -32,33 +38,40 @@ def _tb(tx_words, rx_words, payload: bytes) -> str:
         ) + "  end\n"
 
     ntx, nrx, n = len(tx_words), len(rx_words), len(payload)
+    twb, twt, tsc, tsb = tx_csr or (0, 31, 0, 0)
+    rwb, rwt, rsc, rsb = rx_csr or (0, 31, 0, 0)
+    tside = ((tsc & 1) << 4) | (tsb & 7)
+    rside = ((rsc & 1) << 4) | (rsb & 7)
     return f"""`timescale 1ns/1ps
 module tb;
   reg clk = 0, rst = 1;
   always #10 clk = ~clk;
 
   reg tx_run=0, rx_run=0;
-  reg tx_we=0, rx_re=0, tx_imem_we=0, rx_imem_we=0;
-  reg [4:0] tx_waddr=0, rx_waddr=0;
+  reg tx_we=0, rx_re=0, tx_imem_we=0, rx_imem_we=0, tx_csr_we=0, rx_csr_we=0;
+  reg [4:0] tx_waddr=0, rx_waddr=0, tx_csr_addr=0, rx_csr_addr=0;
   reg [15:0] tx_wdata=0, rx_wdata=0;
-  reg [7:0] tx_byte=0;
+  reg [7:0] tx_byte=0, tx_csr_wdata=0, rx_csr_wdata=0;
   wire [7:0] tx_out, tx_oe, rx_out, rx_oe, tx_rxdata, rx_rxdata;
   wire tx_full, rx_full, tx_empty, rx_empty;
   wire [4:0] tx_pc, rx_pc;
+  // Wired-AND pad with pull-up: drive-0 wins, undriven bits are 1. Matches
+  // open-drain I2C/SWD and push-pull UART/SPI (OE+out=1 → pad 1).
+  wire [7:0] bus = ~((tx_oe & ~tx_out) | (rx_oe & ~rx_out));
 
   loom_engine tx (
     .clk(clk), .rst(rst), .run(tx_run),
-    .gpio_in(8'h00), .gpio_out(tx_out), .gpio_oe(tx_oe),
+    .gpio_in(bus), .gpio_out(tx_out), .gpio_oe(tx_oe),
     .imem_we(tx_imem_we), .imem_waddr(tx_waddr), .imem_wdata(tx_wdata),
-    .imem_slot(2'b00), .sm_sel(1'b0), .csr_we(1'b0), .csr_addr(5'b0), .csr_wdata(8'h00),
+    .imem_slot(2'b00), .sm_sel(1'b0), .csr_we(tx_csr_we), .csr_addr(tx_csr_addr), .csr_wdata(tx_csr_wdata),
     .tx_we(tx_we), .tx_data(tx_byte), .tx_full(tx_full),
     .rx_re(1'b0), .rx_data(tx_rxdata), .rx_empty(tx_empty), .pc(tx_pc)
   );
   loom_engine rx (
     .clk(clk), .rst(rst), .run(rx_run),
-    .gpio_in(tx_out), .gpio_out(rx_out), .gpio_oe(rx_oe),
+    .gpio_in(bus), .gpio_out(rx_out), .gpio_oe(rx_oe),
     .imem_we(rx_imem_we), .imem_waddr(rx_waddr), .imem_wdata(rx_wdata),
-    .imem_slot(2'b00), .sm_sel(1'b0), .csr_we(1'b0), .csr_addr(5'b0), .csr_wdata(8'h00),
+    .imem_slot(2'b00), .sm_sel(1'b0), .csr_we(rx_csr_we), .csr_addr(rx_csr_addr), .csr_wdata(rx_csr_wdata),
     .tx_we(1'b0), .tx_data(8'h00), .tx_full(rx_full),
     .rx_re(rx_re), .rx_data(rx_rxdata), .rx_empty(rx_empty), .pc(rx_pc)
   );
@@ -69,7 +82,7 @@ module tb;
   integer i, ngot, src, idle, pop, lim;
   reg [7:0] got [0:{n}];
   initial begin
-    lim = 64 + {n} * 120;
+    lim = 256 + {n} * 400;
     ngot = 0; src = 0; idle = 0; pop = 0;
     repeat (4) @(posedge clk);
     rst = 0;
@@ -83,6 +96,14 @@ module tb;
       rx_imem_we = 1; rx_waddr = i[4:0]; rx_wdata = RXW[i];
     end
     @(posedge clk); rx_imem_we = 0;
+    @(posedge clk); tx_csr_we = 1; tx_csr_addr = 6; tx_csr_wdata = 8'h{twb:02x};
+    @(posedge clk); tx_csr_addr = 7; tx_csr_wdata = 8'h{twt:02x};
+    @(posedge clk); tx_csr_addr = 8; tx_csr_wdata = 8'h{tside:02x};
+    @(posedge clk); tx_csr_we = 0;
+    @(posedge clk); rx_csr_we = 1; rx_csr_addr = 6; rx_csr_wdata = 8'h{rwb:02x};
+    @(posedge clk); rx_csr_addr = 7; rx_csr_wdata = 8'h{rwt:02x};
+    @(posedge clk); rx_csr_addr = 8; rx_csr_wdata = 8'h{rside:02x};
+    @(posedge clk); rx_csr_we = 0;
     tx_run = 1; rx_run = 1;
     for (i = 0; i < lim; i = i + 1) begin
       @(negedge clk);
@@ -172,7 +193,7 @@ def test_verilog_roundtrip(proto: str, name: str):
     rx = load_graph(PLANS / f"{proto}_rx.toml")
     GEN.mkdir(parents=True, exist_ok=True)
     tb = GEN / f"tb_{proto}_{name}.v"
-    tb.write_text(_tb(tx, rx, payload))
+    tb.write_text(_tb(tx, rx, payload, _csr(PLANS / f"{proto}_tx.toml"), _csr(PLANS / f"{proto}_rx.toml")))
     log = _run_vvp(tb)
     assert "PASS" in log, log
     assert "FAIL" not in log, log
@@ -185,7 +206,7 @@ def test_verilog_every_protocol_hi(name, txf, rxf):
     rx = load_graph(PLANS / rxf)
     GEN.mkdir(parents=True, exist_ok=True)
     tb = GEN / f"tb_all_{name}_hi.v"
-    tb.write_text(_tb(tx, rx, PROTO_HI))
+    tb.write_text(_tb(tx, rx, PROTO_HI, _csr(PLANS / txf), _csr(PLANS / rxf)))
     log = _run_vvp(tb)
     assert "PASS" in log, log
     assert "FAIL" not in log, log

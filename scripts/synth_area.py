@@ -19,9 +19,9 @@ ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 OUT = ROOT / "estimates"
 TOP = "tt_um_loom_gpe"
-SOURCES = ("src/project.v", "src/loom_engine.v")
-TILES = "8x4"
-TILE_COUNT = 32
+SOURCES = ("src/project.v", "src/loom_engine.v", "src/macros/RM_IHPSG13_2P_256x16_c2_bm_bist.v")
+TILES = "6x4"
+TILE_COUNT = 24
 CELL_BUDGET = 32_000
 CELL_MARGIN = 24_000
 CLOCK_NS = 20
@@ -30,6 +30,7 @@ DOCKER_IMAGE = "hdlc/yosys"
 YOSYS_SCRIPT = f"""
 read_verilog -sv src/project.v
 read_verilog src/loom_engine.v
+read_verilog src/macros/RM_IHPSG13_2P_256x16_c2_bm_bist.v
 hierarchy -check -top {TOP}
 synth -top {TOP} -flatten
 stat

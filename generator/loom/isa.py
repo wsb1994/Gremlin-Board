@@ -42,6 +42,8 @@ JMP_Y_EQ0 = 2
 JMP_X_DEC = 3
 JMP_Y_DEC = 4
 JMP_PIN = 5
+JMP_TX_NE = 6  # jump if TX FIFO has a byte (hold CS / next frame)
+JMP_TX_EQ0 = 7  # jump if TX FIFO empty
 
 # WAIT payload: [4]=polarity, [3:0]=pin
 # IN/OUT field: shift direction on the 8-bit register, protocol-agnostic
@@ -69,6 +71,7 @@ REG_OSR = 2
 REG_ISR = 3
 REG_PINS = 4
 REG_NULL = 5
+REG_PINDIRS = 5  # MOV dest field 5 writes all 8 OE bits (src NULL is payload 5)
 REG_XOR_Y = 6  # MOV dest = dest ^ Y (payload 6)
 REG_CRC_FEED = 7  # feed OSR LSB into hidden CRC-15 (poly 0x4599)
 REG_CRC_LO = 8  # dest = crc[7:0]
@@ -92,6 +95,7 @@ CSR_SM0_CLKDIV_FRAC = 5
 CSR_SM0_WRAP_BOT = 6
 CSR_SM0_WRAP_TOP = 7
 CSR_SM0_SIDE = 8  # [2:0] base pin, [4]=sideset_count (0 or 1)
+CSR_FIFO_SEL = 9  # host TX/RX target SM (0 or 1)
 CSR_SM1_CLKDIV_LO = 19
 CSR_SM1_CLKDIV_HI = 20
 CSR_SM1_CLKDIV_FRAC = 21

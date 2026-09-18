@@ -12,6 +12,8 @@ from loom.isa import (
     IMEM_WORDS,
     JMP_ALWAYS,
     JMP_PIN,
+    JMP_TX_EQ0,
+    JMP_TX_NE,
     JMP_X_DEC,
     JMP_X_EQ0,
     JMP_Y_DEC,
@@ -27,6 +29,7 @@ from loom.isa import (
     REG_ISR,
     REG_NULL,
     REG_OSR,
+    REG_PINDIRS,
     REG_XOR_Y,
     REG_CRC_CLR,
     REG_CRC_FEED,
@@ -55,6 +58,7 @@ _REG = {
     "isr": REG_ISR,
     "pins": REG_PINS,
     "null": REG_NULL,
+    "pindirs": REG_PINDIRS,
     "xor_y": REG_XOR_Y,
     "crc_feed": REG_CRC_FEED,
     "crc_lo": REG_CRC_LO,
@@ -209,6 +213,10 @@ def compile_plan(plan: Plan) -> Program:
             prog.add(Instr(OP_JMP, d, JMP_Y_EQ0, _label(step), step.name))
         elif fn == "jmp_pin":
             prog.add(Instr(OP_JMP, d, JMP_PIN, _label(step), step.name))
+        elif fn == "jmp_tx_ne":
+            prog.add(Instr(OP_JMP, d, JMP_TX_NE, _label(step), step.name))
+        elif fn == "jmp_tx_eq0":
+            prog.add(Instr(OP_JMP, d, JMP_TX_EQ0, _label(step), step.name))
         elif fn == "mov":
             dest = _reg(step, 0, REG_X)
             src = _reg(step, 1, REG_NULL)

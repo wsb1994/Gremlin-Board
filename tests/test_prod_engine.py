@@ -68,6 +68,21 @@ def test_jmp_y_eq0_taken_and_not():
     assert sm.pc == 1
 
 
+def test_clkdiv_zero_is_max_period():
+    eng = Engine()
+    eng.sm.clkdiv_int = 0
+    eng.sm.imem[0] = encode(OP_SET, field=SET_X, payload=7)
+    eng.sm.imem[1] = encode(OP_NOP)
+    eng.sm.run = True
+    eng.sm.tick(0)
+    assert eng.sm.x == 7
+    assert eng.sm.div_down == 0xFFFF
+    pc = eng.sm.pc
+    eng.sm.tick(0)
+    assert eng.sm.pc == pc
+    assert eng.sm.div_down == 0xFFFE
+
+
 def test_clkdiv_int_2_halves_sm_rate():
     a = Engine()
     b = Engine()
@@ -135,6 +150,7 @@ def test_rtl_slots_two_sms():
         ctx.set(dut.imem_wdata, encode(OP_SET, field=SET_BIT, payload=1))
         await ctx.tick()
         ctx.set(dut.imem_we, 0)
+        await ctx.tick()  # clocked imem preload of pc=0
         ctx.set(dut.run, 1)
         for _ in range(4):
             await ctx.tick()

@@ -6,7 +6,7 @@ Tiny Tapeout datasheet.
 
 A reprogrammable graph engine: pin, wait, delay, shift, fifo, jump, mov. UART, SPI, I2C, and anything else are graphs loaded into instruction memory after tapeout — not hardwired blocks.
 
-The die holds **four 32-instruction graph slots** and **two state machines**. Baud is a clock divider CSR, not a hardwired UART. GPIO inputs are 2-flop synchronised while running.
+The die holds **four 32-instruction graph slots** and **two state machines**, each with its own TX/RX FIFO. Baud is a clock divider CSR, not a hardwired UART. GPIO inputs are 2-flop synchronised while running. Four-slot instruction memory is IHP 2-port SRAM (`RM_IHPSG13_2P_256x16_c2_bm_bist`, 1-cycle `next_pc` fetch). It is volatile: `rst_n` forgets the graphs.
 
 RTL is generated from `generator/loom` (Amaranth). Protocol graphs live in `plans/`. Production UART 8N1: `uart_8n1_tx.toml` / `uart_8n1_rx.toml`.
 
@@ -50,23 +50,32 @@ A single strobe only latches the low byte; the word is not in imem until the sec
 
 ### CSR write
 
-Hold `ui_in[7]=1`, set `ui_in[6:2]` to the CSR address, `uio_in` to the byte, pulse `ui_in[1]`. Useful addresses: `0` write-slot 0..3; `1`/`2` SM0/SM1 execute-slot; `3`/`4`/`5` SM0 clkdiv lo/hi/frac; `6`/`7` SM0 wrap bottom/top.
+Hold `ui_in[7]=1`, set `ui_in[6:2]` to the CSR address, `uio_in` to the byte, pulse `ui_in[1]`. Useful addresses: `0` write-slot 0..3; `1`/`2` SM0/SM1 execute-slot; `3`/`4`/`5` SM0 clkdiv lo/hi/frac; `6`/`7` SM0 wrap bottom/top; `9` host FIFO SM select.
 
-### Push one TX byte
+### Push one TX byte (halt)
 
-FIFO depth is 4. Skip the push if `uo_out[1]` (`tx_full`) is 1.
+FIFO depth is 4 per state machine. CSR 9 selects which SM the host talks to (default 0). Skip the push if `uo_out[1]` (`tx_full`) is 1.
 
 4. Halt: `ui_in[0]=0`, `ui_in[1]=0`, `ui_in[2]=0`.
 5. `uio_in=byte`. Pulse `ui_in[7]`.
 
-### Pop one RX byte
+### Pop one RX byte (halt)
 
 6. Halt, `ui_in[2]=1`. `uo_out` is the FIFO head. Pulse `ui_in[7]` to pop. Skip if `rx_empty`.
 
+### Live FIFO (run=1, GPIO stays on `uio`)
+
+Do not drop `run` to refill. While `ui_in[0]=1`, `uio` is the protocol bus.
+
+- TX: two nibbles on `ui_in[6:3]`, `ui_in[2]=0`, pulse `ui_in[7]` each. First strobe latches the low nibble; second commits `{high, low}`.
+- RX: `ui_in[2]=1` puts the FIFO head on `uo_out`; pulse `ui_in[7]` to pop.
+
 ### Run
 
-7. Drive `ui_in[0]=1`. SM0 and SM1 execute from `pc=0` in their assigned slots. `uio` becomes GPIO (`uio_oe` follows the graphs). Inputs are 2-flop synchronised.
+7. Drive `ui_in[0]=1` with `ena=1`. SM0 and SM1 execute from `pc=0` in their assigned slots. `uio_oe` is registered (one-cycle turnaround). Inputs are 2-flop synchronised. `ena=0` forces OE=0 and ignores strobes.
 8. To reprogram: `ui_in[0]=0`, then repeat from step 2. Asserting run clears a half-written imem word. Pulse `rst_n` to clear imem, FIFOs, CSRs, and `pc`.
+
+`clkdiv` integer 0 is a 65536-cycle SM period, not “divide by 1”.
 
 ## External hardware
 

@@ -12,6 +12,8 @@ from loom.isa import (
     IMEM_WORDS,
     JMP_ALWAYS,
     JMP_PIN,
+    JMP_TX_EQ0,
+    JMP_TX_NE,
     JMP_X_DEC,
     JMP_X_EQ0,
     JMP_Y_DEC,
@@ -28,6 +30,7 @@ from loom.isa import (
     REG_ISR,
     REG_NULL,
     REG_OSR,
+    REG_PINDIRS,
     REG_PINS,
     REG_X,
     REG_XOR_Y,
@@ -130,17 +133,23 @@ class SM:
         return eff
 
     def _clk_en(self) -> bool:
-        """True when this sysclk is an SM cycle. clkdiv_int=1, frac=0 → every cycle."""
-        intval = self.clkdiv_int if self.clkdiv_int else 65536
+        """True when this sysclk is an SM cycle. clkdiv_int=1, frac=0 → every cycle.
+
+        clkdiv_int=0 is a 65536-cycle period (reload 0xFFFF), matching RTL.
+        """
         if self.div_down:
             self.div_down -= 1
             return False
+        if not self.clkdiv_int:
+            self.div_down = 0xFFFF
+            return True
         extra = 0
         self.frac_acc = (self.frac_acc + self.clkdiv_frac) & 0x1FF
         if self.frac_acc >= 256:
             extra = 1
             self.frac_acc -= 256
-        self.div_down = intval - 1 + extra
+        reload = self.clkdiv_int - 1 + extra
+        self.div_down = reload & 0xFFFF
         return True
 
     def _apply_sideset(self) -> None:
@@ -178,6 +187,8 @@ class SM:
             self.isr = value
         elif dest == REG_PINS:
             self.out_reg = value
+        elif dest == REG_PINDIRS:
+            self.oe_reg = value
 
     def tick(self, gpio_in: int = 0) -> None:
         if not self.run:
@@ -227,6 +238,14 @@ class SM:
                 if (eff >> self.in_pin) & 1:
                     next_pc = target
                     taken_jmp = True
+            elif field == JMP_TX_NE:
+                if not self.tx.empty:
+                    next_pc = target
+                    taken_jmp = True
+            elif field == JMP_TX_EQ0:
+                if self.tx.empty:
+                    next_pc = target
+                    taken_jmp = True
         elif op == OP_WAIT:
             pin = payload & 15
             pol = (payload >> 4) & 1
@@ -246,6 +265,7 @@ class SM:
             else:
                 self.out_reg &= ~(1 << p)
             self.out_reg &= 0xFF
+            self.oe_reg = (self.oe_reg | (1 << p)) & 0xFF
         elif op == OP_IN:
             # One sample per instruction from in_pin; payload is reserved (RTL ignores it).
             sample = (eff >> self.in_pin) & 1
@@ -306,7 +326,9 @@ class SM:
             elif field == SET_Y:
                 self.y = payload & 31
             elif field == SET_BIT:
-                self.out_reg = (self.out_reg | (1 << (payload & 7))) & 0xFF
+                bit = 1 << (payload & 7)
+                self.out_reg = (self.out_reg | bit) & 0xFF
+                self.oe_reg = (self.oe_reg | bit) & 0xFF
             elif field == CLR_BIT:
                 self.out_reg = (self.out_reg & ~(1 << (payload & 7))) & 0xFF
             elif field == SET_OUTPIN:
@@ -375,11 +397,20 @@ class Engine:
         self.sms[sm].imem = self.slots[slot]
 
     def _bus(self, gpio_in: int) -> int:
+        """Pad view: any driver pulling down wins (open-drain); else driven-1; else input."""
         bus = gpio_in & 0xFF
+        drive0 = 0
+        drive1 = 0
+        oe = 0
         for sm in self.sms:
-            for i in range(8):
-                if (sm.oe_reg >> i) & 1:
-                    bus = (bus & ~(1 << i)) | (sm.out_reg & (1 << i))
+            oe |= sm.oe_reg & 0xFF
+            drive0 |= sm.oe_reg & (~sm.out_reg) & 0xFF
+            drive1 |= sm.oe_reg & sm.out_reg & 0xFF
+        driven = drive1 & ~drive0
+        for i in range(8):
+            if (oe >> i) & 1:
+                bit = (driven >> i) & 1
+                bus = (bus & ~(1 << i)) | (bit << i)
         return bus
 
     def run_cycles(self, n: int, gpio_in_seq: list[int] | None = None) -> None:

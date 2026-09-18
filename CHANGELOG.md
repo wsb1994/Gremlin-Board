@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.5.1
+
+- 2-SM k-induction: host CSR writes (SM0/SM1 slot, clkdiv, wrap, sideset, fifo_sel)
+- `loom_chip` instantiates IHP 2P 256×16 SRAM; Python tests keep the Array model
+- Cocotb wrapper: UART TX `H` start-bit on pin0
+- README / exec summary match the closed 1-SM GDS numbers and current proofs
+- Desk-infra T1–T8 in sim (`tests/test_infra_desk.py`); SPI on pins 3/4/5 for dual-SM with UART
+- Live nibble TX while `run=1` in the wrapper model (`test_host_load`)
+
+## 0.5.0
+
+- Clock: `clkdiv=0` is a 65536-cycle SM period (was divide-by-1 in RTL vs 65536 in interp)
+- Clock: 4-slot imem is a clocked 128×16 with `next_pc` addressing (decode off the combo ROM mux)
+- Host FIFO works while GPIO is live (nibble TX on `ui_in[6:3]`, RX peek/pop); `ena` gates OE
+- Per-SM TX/RX FIFOs; CSR 9 selects the host target; dual-SM pad merge is pulldown-wins
+- `SET_BIT`/`OUT` enable the pin they drive (pins 5–7 are reachable); `MOV pindirs` writes all 8 OE bits
+- `JMP_TX_NE` / `JMP_TX_EQ0`; CS-held SPI burst graphs; UART 8N1 RX on pin3 for full-duplex
+- k-induction covers CRC-15 feed/clr and the new JMP/MOV/OE rules
+
 ## 0.4.0
 
 - Production graph engine: MOV and JMP Y==0 implemented; clock divider (16.8); wrap; 1-bit sideset

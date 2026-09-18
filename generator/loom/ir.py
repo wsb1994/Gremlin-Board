@@ -53,7 +53,7 @@ PRIMITIVES: dict[str, Primitive] = {
         Primitive("pull", "Load TX FIFO byte into OSR"),
         Primitive("push", "Store ISR byte into RX FIFO"),
         Primitive("set_pins", "Write low 5 GPIO output bits"),
-        Primitive("set_pindirs", "Write low 5 GPIO OE bits"),
+        Primitive("set_pindirs", "Write GPIO OE bits 0-4; bits 5-7 kept. MOV pindirs for all 8"),
         Primitive("set_x", "Load scratch X"),
         Primitive("set_y", "Load scratch Y"),
         Primitive("set_bit", "Set one output bit"),
@@ -73,6 +73,8 @@ PRIMITIVES: dict[str, Primitive] = {
         Primitive("jmp_x_eq0", "Jump if X==0", control=True),
         Primitive("jmp_y_eq0", "Jump if Y==0", control=True),
         Primitive("jmp_pin", "Jump if pin high", control=True),
+        Primitive("jmp_tx_ne", "Jump if TX FIFO nonempty", control=True),
+        Primitive("jmp_tx_eq0", "Jump if TX FIFO empty", control=True),
     )
 }
 

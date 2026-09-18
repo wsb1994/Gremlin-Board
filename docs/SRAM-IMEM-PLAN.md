@@ -1,7 +1,7 @@
 # SRAM instruction memory (same graphs, far less fabric)
 
-Date: 2026-09-15
-Status: plan — not implemented
+Date: 2026-09-16
+Status: `loom_chip` instantiates `RM_IHPSG13_2P_256x16_c2_bm_bist` (`src/macros/`). Python/formal keep the 1-cycle Array model. 2-SM+SRAM GDS not yet closed.
 
 Keep the ISA, 4 slots, 2 SMs, host pins, and UART 8N1 traces. Stop implementing imem as 2048 flops. Use one IHP **2-port SRAM macro** as the instruction memory. No FF windows. No copy FSM.
 

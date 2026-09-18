@@ -120,7 +120,8 @@ def spi_payload_from_tx(gpio: list[int]) -> bytes:
             if rise is None:
                 break
             bits = _sample_rise(mosi[fall:rise], sck[fall:rise], prev=0)
-            out.append(pack_msb(bits))
+            for k in range(0, len(bits) - 7, 8):
+                out.append(pack_msb(bits[k:k + 8]))
             i = rise + 1
             continue
         i += 1

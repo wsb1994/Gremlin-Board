@@ -134,10 +134,9 @@ def test_spi_jedec_id_model():
     """Flash-style 0x9F: master clocks 8+24, device shifts 0xEF4016 on MISO=pin0 via loopback of programmed response."""
     cmd = b"\x9f"
     jedec = bytes.fromhex("ef4016")
-    tx = load_graph(PLANS / "spi_tx.toml")
-    rx = load_graph(PLANS / "spi_rx.toml")
-    # Master sends 0x9F then three dummy bytes; we only check the command on the wire,
-    # then feed a device waveform of JEDEC on the same MOSI/SCK shape.
+    tx = load_graph(PLANS / "spi_burst_tx.toml")
+    rx = load_graph(PLANS / "spi_burst_rx.toml")
+    # Master holds CS across 0x9F + 3 dummy/data bytes (W25 JEDEC ID).
     got, _ = roundtrip(tx, rx, cmd + jedec)
     assert got == cmd + jedec
 

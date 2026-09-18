@@ -1,0 +1,58 @@
+name = "spi_burst_rx"
+description = "Mode-0 decode, extra bytes while CS held. MOSI=pin0 SCK=pin1 CS=pin2."
+protocol = "spi"
+direction = "decode"
+
+[[steps]]
+name = "wait_cs_lo"
+function = "wait_pin"
+inputs = ["2", "0"]
+
+[[steps]]
+name = "mosi"
+function = "set_inpin"
+inputs = ["0"]
+
+[[steps]]
+name = "count"
+function = "set_x"
+inputs = ["7"]
+
+[[steps]]
+name = "wait_rise"
+function = "wait_pin"
+inputs = ["1", "1"]
+
+[[steps]]
+name = "sample"
+function = "in_msb"
+inputs = ["1"]
+
+[[steps]]
+name = "wait_fall"
+function = "wait_pin"
+inputs = ["1", "0"]
+
+[[steps]]
+name = "next_bit"
+function = "jmp_x_dec"
+inputs = ["wait_rise"]
+
+[[steps]]
+name = "store"
+function = "push"
+
+[[steps]]
+name = "sel_cs"
+function = "set_inpin"
+inputs = ["2"]
+
+[[steps]]
+name = "cs_high"
+function = "jmp_pin"
+inputs = ["wait_cs_lo"]
+
+[[steps]]
+name = "next_byte"
+function = "jmp"
+inputs = ["mosi"]
