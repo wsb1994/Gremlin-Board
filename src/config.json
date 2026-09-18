@@ -47,6 +47,18 @@
     "engine.imem.imem_sram VPWR VGND VDD! VSS!",
     "engine.imem.imem_sram VPWR VGND VDDARRAY! VSS!"
   ],
+  "MACROS": {
+    "RM_IHPSG13_2P_256x16_c2_bm_bist": {
+      "gds": ["dir::macros/RM_IHPSG13_2P_256x16_c2_bm_bist.gds"],
+      "lef": ["dir::macros/RM_IHPSG13_2P_256x16_c2_bm_bist.lef"],
+      "instances": {
+        "engine.imem.imem_sram": {
+          "location": [434.4, 559.44],
+          "orientation": "N"
+        }
+      }
+    }
+  },
   "FP_MACRO_HORIZONTAL_HALO": 10,
   "FP_MACRO_VERTICAL_HALO": 10,
 
