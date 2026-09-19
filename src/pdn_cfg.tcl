@@ -183,12 +183,12 @@ if { $::env(PDN_CORE_RING) == 1 } {
     }
 }
 
-# Tiny Tapeout CMOS5L PDN is Metal4 straps + Metal1 rails. The SRAM LEF
-# obstructs most of Metal4 and its VDDARRAY! pins do not reach the macro edge,
-# so run TopMetal1 straps across the core over the SRAM band. They must belong
-# to the core grid (tied to every Metal4 strap): a TopMetal1 island over the
-# macro alone leaves the rest of the grid unreachable for PSM (PSM-0069).
-# Offsets put VPWR over VDD! (lower 47um) and twice over VDDARRAY! (upper part).
+# Tiny Tapeout CMOS5L PDN is Metal4 straps + Metal1 rails. Core Metal4
+# straps stop ~0.5um south of the SRAM (LEF Metal4 OBS), so VDD!/VSS!/
+# VDDARRAY! pins are islands without a bridge (PSM-0069). TopMetal1 is
+# not obstructed: strap it over the SRAM band on the core grid and via
+# down onto the Metal4 PG pins. A TopMetal1 island on the macro grid
+# alone leaves the rest of the core grid unreachable.
 add_pdn_stripe \
     -grid stdcell_grid \
     -layer $::env(PDN_HORIZONTAL_LAYER) \
@@ -215,3 +215,5 @@ define_pdn_grid \
 add_pdn_connect \
     -grid sram \
     -layers "$::env(PDN_VERTICAL_LAYER) $::env(PDN_HORIZONTAL_LAYER)"
+
+

@@ -65,6 +65,11 @@
   "PDN_HORIZONTAL_HALO": 0,
   "PDN_VERTICAL_HALO": 0,
 
+  "//": "IHP SRAM GDS trips Magic DRC inside the macro (IHP-Open-PDK #794). Load the LEF abstract so Magic only checks our stdcell layout. Tiny Tapeout CMOS5L precheck uses KLayout, which already has SRAM exemptions.",
+  "MAGIC_DRC_MAGLEFS": [
+    "dir::macros/RM_IHPSG13_2P_256x16_c2_bm_bist.mag"
+  ],
+
   "//": "Configuration docs: https://librelane.readthedocs.io/en/latest/reference/configuration.html",
 
   "//": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
