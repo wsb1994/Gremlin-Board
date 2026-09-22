@@ -27,6 +27,8 @@ VERILOG_SOURCES += $(PDK_ROOT)/ihp-sg13cmos5l/libs.ref/sg13cmos5l_stdcell/verilo
 
 # this gets copied in by the GDS action workflow
 VERILOG_SOURCES += $(PWD)/gate_level_netlist.v
+# Hardened netlist black-boxes the IHP SRAM. Functional sim needs the model.
+VERILOG_SOURCES += $(SRC_DIR)/macros/RM_IHPSG13_2P_256x16_c2_bm_bist.v
 
 endif
 
