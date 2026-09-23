@@ -10,13 +10,13 @@ Everything below is stated as tested, simulated, synthesised, or not done. Nothi
 
 | Item | State |
 |---|---|
-| GDS on CMOS5L, 6×4 | Closed **1-SM / 1-slot** GDS (`tt_submission`): 3,499 cells, 8% util, Magic DRC 0, LVS clean, slow setup **+8.99 ns**. Current source is **2 SM / 4 slots**; `loom_chip` instantiates IHP `RM_IHPSG13_2P_256x16_c2_bm_bist` (Python tests keep a 1-cycle Array model). A previous combo-FF 2-SM P&R died in detailed routing (clk fanout 2413). |
-| Timing at 50 MHz | 1-SM closed part: slow setup +8.99 ns, hold +0.12 ns. 2-SM fetch is registered (`next_pc` ADDR). `clkdiv=0` is a 65536-cycle period. |
+| GDS on CMOS5L, 6×4 | Closed **2-SM / 4-slot** GDS (`tt_submission`, CI run on `d69796a`): 5,086 std cells + IHP `RM_IHPSG13_2P_256x16_c2_bm_bist` SRAM macro, 14.3% util, Magic DRC 0, LVS clean, antenna 0, slow setup **+7.46 ns**. This is the current `src/project.v` (`loom_chip`). Python tests keep a 1-cycle Array model of the SRAM. |
+| Timing at 50 MHz | Closed 2-SM part: setup slack slow/typ/fast +7.46 / +10.14 / +10.69 ns, worst hold +0.11 ns. 2-SM fetch is registered (`next_pc` ADDR). `clkdiv=0` is a 65536-cycle period. |
 | Protocol graphs | UART (hello + 8N1), SPI mode 0 + CS, I2C open-drain, JTAG TMS TAP, SWD, PS/2, CAN, USB low-speed, Ethernet framing. All fit in 32 words. |
 | Exhaustive protocol check | Every byte 0..255 on all 10 TX/RX pairs, on the Python interpreter, against independent spec languages (`loom formal-proto`). |
 | ISA formal | k-induction (yosys `sat -tempinduct`, 12 steps) on 1-SM ISA + CRC MOV 7–11 + host CSR writes; ClockedImem contract; 2-SM fetch + SM0/SM1 CSR writes. Passes. |
 | Interpreter vs generated Verilog | All 2048 ISA encodings × 7 stimuli under iverilog. Passes. |
-| Gate-level | Tiny Tapeout `gl_test` on the CI netlist checks reset and idle status only. No protocol traffic is simulated at gate level. |
+| Gate-level | Tiny Tapeout `gl_test` on the hardened netlist runs `test/test.py`: reset/idle status, SET_BIT, and a full UART round-trip. SM0 encodes `Hi` on pin0 from the UART TX graph, the bench loops pin0 back with a pull-up, SM1 decodes it with the UART RX graph in slot 1, and the host pops `Hi` from SM1's RX FIFO. The bench also decodes the pin0 waveform as 8N1 independently. Passes on the `d69796a` netlist. |
 | FPGA / hardware | Not done. |
 | Contest sign-up and submission | Not done. Deadline 2027-01-18. |
 
@@ -48,21 +48,22 @@ Each graph is a byte-level line codec, not a full standard. USB, CAN and Etherne
 - **Host load:** two-phase imem write, TX push, run, on the engine ports and a cycle model of the wrapper. `tests/test_host_load.py`.
 - **ASCII waveform expect tests:** `tests/test_timing_infra.py`, `tests/expect/`.
 
-Not verified: protocol traffic on the **gate-level** netlist (cocotb RTL wrapper now loads UART TX and checks a start bit), any transfer against a real peer device, FPGA bring-up.
+Not verified: any transfer against a real peer device, FPGA bring-up. Gate-level protocol traffic is UART only (`test/test.py`); the other graphs are checked on RTL under iverilog.
 
 ## Area and timing
 
-Numbers from the CI GDS run on commit `f552ddc` (`tt_submission` artifact, `stats/metrics.csv`):
+Numbers from the CI GDS run on commit `d69796a` (`tt_submission` artifact, `stats/metrics.csv`, 2 SM / 4 slots / IHP SRAM):
 
 | Metric | Value |
 |---|---|
-| Std cells (1-SM closed GDS) | 3,499 |
-| Std cell area | 56,492 µm² of 902,417 µm² core (8%) |
-| Setup slack, slow / typ / fast | +8.99 / +7.47 / +11.4 ns (see `tt_submission/stats/metrics.csv`) |
-| Hold slack, worst | +0.12 ns |
-| Magic DRC / LVS / antenna | 0 / clean / 0 |
+| Std cells | 5,086 (+ 1 SRAM macro) |
+| Std cell area | 71,469 µm²; macro 57,521 µm²; 14.3% of the 6×4 core |
+| Setup slack, slow / typ / fast | +7.46 / +10.14 / +10.69 ns |
+| Hold slack, worst | +0.11 ns (fast corner) |
+| Magic DRC / LVS / antenna / route DRC | 0 / clean / 0 / 0 |
+| Slew / fanout / cap violations (slow corner) | 10 / 41 / 8 (non-blocking; precheck passes) |
 
-`estimates/synth.txt` is a generic Yosys estimate from an earlier revision and is not a P&R number. `loom_chip` instantiates IHP `RM_IHPSG13_2P_256x16_c2_bm_bist` (`src/macros/`, `docs/SRAM-IMEM-PLAN.md`). The submitted GDS is still the 1-SM engine until a 2-SM+SRAM run closes.
+`estimates/synth.txt` is a generic Yosys estimate from an earlier revision and is not a P&R number. `loom_chip` instantiates IHP `RM_IHPSG13_2P_256x16_c2_bm_bist` (`src/macros/`, `docs/SRAM-IMEM-PLAN.md`); the PDN straps the macro on Metal4 (`src/pdn_cfg.tcl`). The earlier 1-SM GDS (3,499 cells, +8.99 ns) is superseded.
 
 ## Install and run
 
@@ -73,7 +74,7 @@ python3 -m venv .venv
 
 ```
 make check            # engine core names no protocol
-make test             # 390 interpreter + Amaranth tests, all passing at f552ddc (~15 min)
+make test             # 390 interpreter + Amaranth tests (~15 min)
 make emit             # regenerate src/loom_engine.v + src/project.v
 make test-verilog     # iverilog round-trips on generated RTL
 make test-exhaustive  # all ISA encodings, interpreter vs Verilog
@@ -84,7 +85,9 @@ make verify           # test-verilog + test-exhaustive + formal
 
 iverilog and a full yosys are taken from the LibreLane image `ghcr.io/librelane/librelane:3.1.0.dev3` through Docker when they are not on PATH.
 
-CI (`.github/workflows`): `loom.yml` runs `loom check`, the interpreter suite, the exhaustive ISA golden and the k-induction proof. `gds.yaml` hardens on CMOS5L and runs precheck and the gate-level test. `test.yaml` runs the cocotb wrapper test.
+CI (`.github/workflows`): `loom.yml` runs `loom check`, the interpreter suite, the exhaustive ISA golden and the k-induction proof. `gds.yaml` hardens on CMOS5L and runs precheck and the gate-level test. `test.yaml` runs the cocotb wrapper test on RTL.
+
+Gate-level locally: copy `tt_submission/tt_um_loom_gpe.v` to `test/gate_level_netlist.v`, then `GATES=yes PDK_ROOT=<pdk> python3 test/run_cocotb.py` (or `make -B GATES=yes` in `test/`). `run_cocotb.py` needs no `make`, so it runs inside the LibreLane image.
 
 Loading a graph onto the chip: `docs/info.md` (pinout, two-phase imem write, TX push, RX pop, CSRs).
 
@@ -105,8 +108,7 @@ docs/CRITERIA.md   contest checklist
 
 - Contest sign-up form and submission.
 - FPGA smoke test.
-- Protocol traffic on the gate-level netlist.
+- Gate-level traffic for protocols other than UART.
 - Any test against real hardware.
-- 2-SM + SRAM GDS (P&R of current `loom_chip`). The closed artifact is 1-SM.
 
 License: Apache-2.0.

@@ -161,7 +161,7 @@ def on_first(c, doc):
     c.setFillColor(colors.HexColor("#D5DEE8"))
     c.drawString(54, h - 68, "Mapped to blog.janestreet.com/protocol-emulator-asic-competition")
     c.setFont("Helvetica", 8)
-    c.drawRightString(w - 54, h - 68, "2026-09-15")
+    c.drawRightString(w - 54, h - 68, "2026-09-23")
     c.restoreState()
 
 
@@ -221,7 +221,7 @@ class ProofStack(Flowable):
             (132, TEAL, WHITE, "k-induction  ·  54 named assertions  ·  1-SM GraphEngine, default CSRs"),
             (100, STEEL, WHITE, "Exhaustive 0..255 on the interpreter  ·  10 of 10 pairs"),
             (68, NAVY, WHITE, "Amaranth RTL pin traces = interpreter  ·  UART / SPI / I2C hello only"),
-            (36, colors.HexColor("#3D5A40"), WHITE, "iverilog Hi tests exist on loom_engine  ·  not re-run after USB/CAN rewrite"),
+            (36, colors.HexColor("#3D5A40"), WHITE, "Gate-level netlist: UART Hi SM0 TX -> pin0 -> SM1 RX -> host pop  ·  UART only"),
             (4, AMBER, WHITE, "FPGA pin / USB-UART / flash / EEPROM / TAP  ·  not run"),
         ]
         for y, fill, tc, txt in layers:
@@ -242,22 +242,22 @@ class DieVsSource(Flowable):
         c, w = self.canv, self._w
         bw = (w - 18) / 2
         rbox(c, 0, 8, bw, 116, TEAL_SOFT, TEAL, 6)
-        label(c, bw / 2, 106, "CLOSED GDS  (runs/wokwi, tt_submission)", 8, TEAL, True)
-        label(c, bw / 2, 88, "tt_um_loom_gpe instantiates loom_engine", 7.5, NAVY)
-        label(c, bw / 2, 74, "1 state machine  ·  1 × 32-word imem", 8, NAVY, True)
-        label(c, bw / 2, 58, "3,499 CMOS5L cells   623 FFs", 8, TEXT)
-        label(c, bw / 2, 44, "56,492 sq um   ~8% of 6x4 tile area", 7.5, MUTED)
-        label(c, bw / 2, 30, "Magic DRC 0  ·  LVS unique match", 7.5, MUTED)
-        label(c, bw / 2, 16, "50 MHz  ·  slow setup slack +8.99 ns", 7.5, MUTED)
+        label(c, bw / 2, 106, "CLOSED GDS  (tt_submission, CI d69796a)", 8, TEAL, True)
+        label(c, bw / 2, 88, "tt_um_loom_gpe instantiates loom_chip", 7.5, NAVY)
+        label(c, bw / 2, 74, "2 state machines  ·  4 × 32-word imem in IHP SRAM", 8, NAVY, True)
+        label(c, bw / 2, 58, "5,086 CMOS5L cells   485 FFs   1 SRAM macro", 8, TEXT)
+        label(c, bw / 2, 44, "71,469 + 57,521 sq um   14.3% of 6x4 tile area", 7.5, MUTED)
+        label(c, bw / 2, 30, "Magic DRC 0  ·  LVS clean  ·  antenna 0", 7.5, MUTED)
+        label(c, bw / 2, 16, "50 MHz  ·  slow setup slack +7.46 ns  ·  hold +0.11 ns", 7.5, MUTED)
 
         rbox(c, bw + 18, 8, bw, 116, AMBER_SOFT, AMBER, 6)
-        label(c, bw + 18 + bw / 2, 106, "CURRENT SOURCE  (src/project.v)", 8, AMBER, True)
-        label(c, bw + 18 + bw / 2, 88, "tt_um_loom_gpe instantiates loom_chip", 7.5, NAVY)
-        label(c, bw + 18 + bw / 2, 74, "2 state machines  ·  4 × 32-word imem", 8, NAVY, True)
-        label(c, bw + 18 + bw / 2, 58, "synth 14,944 cells   2,412 FFs", 8, TEXT)
-        label(c, bw + 18 + bw / 2, 44, "233,174 sq um   still under 6x4 area", 7.5, MUTED)
-        label(c, bw + 18 + bw / 2, 30, "LibreLane P&R stopped in detailed route", 7.5, MUTED)
-        label(c, bw + 18 + bw / 2, 16, "no GDS / DRC / LVS for this netlist", 7.5, MUTED)
+        label(c, bw + 18 + bw / 2, 106, "SUPERSEDED 1-SM GDS  (f552ddc)", 8, AMBER, True)
+        label(c, bw + 18 + bw / 2, 88, "tt_um_loom_gpe instantiated loom_engine", 7.5, NAVY)
+        label(c, bw + 18 + bw / 2, 74, "1 state machine  ·  1 × 32-word FF imem", 8, NAVY, True)
+        label(c, bw + 18 + bw / 2, 58, "3,499 cells   623 FFs", 8, TEXT)
+        label(c, bw + 18 + bw / 2, 44, "56,492 sq um   ~8% of 6x4 area", 7.5, MUTED)
+        label(c, bw + 18 + bw / 2, 30, "Magic DRC 0  ·  LVS match  ·  +8.99 ns", 7.5, MUTED)
+        label(c, bw + 18 + bw / 2, 16, "no SRAM, no second SM, no gate-level traffic", 7.5, MUTED)
 
 
 def grid(data, col_widths):
@@ -283,7 +283,7 @@ def grid(data, col_widths):
 
 def metric_strip(st):
     cells = [
-        ("1-SM GDS", "closed @ 50 MHz<br/>DRC 0, LVS match"),
+        ("2-SM GDS", "closed @ 50 MHz<br/>DRC 0, LVS, +7.46 ns"),
         ("54", "k-induction asserts<br/>ISA + FIFO/halt"),
         ("10 x 256", "interp codecs proven<br/>all registered pairs"),
         ("0", "FPGA / real-pin<br/>bring-up runs"),
@@ -387,7 +387,9 @@ def build():
             "a helper clock on pin2; that pin is not part "
             "of those buses. The ISA is k-induction proven on the 1-SM engine (54 named "
             "assertions). UART/SPI/I2C hello pin traces match Amaranth RTL (push-pull I2C, "
-            "not the open-drain pair). Nothing has been run on an FPGA or a real peer device.",
+            "not the open-drain pair). The 2-SM / 4-slot / SRAM GDS closed in CI and the "
+            "cocotb UART Hi round-trip (SM0 TX, pin0 loopback, SM1 RX, host pop) passes on "
+            "that hardened netlist. Nothing has been run on an FPGA or a real peer device.",
             st,
         )
     )
@@ -471,17 +473,16 @@ def build():
         ),
         (
             "Area: 6×4 tiles (~0.7 mm², ~1k cells/tile ≈ 24k cell budget)",
-            "Closed GDS (1 SM): 3,499 cells, 56,492 µm². Current 2-SM loom_chip instantiates "
-            "IHP RM_IHPSG13_2P_256x16_c2_bm_bist for imem. 2-SM+SRAM P&amp;R not closed.",
+            "Closed GDS (2 SM, 4 slots): 5,086 std cells, 71,469 µm², plus IHP "
+            "RM_IHPSG13_2P_256x16_c2_bm_bist macro 57,521 µm². 14.3% of the 6×4 core.",
             "Yes — under budget",
         ),
         (
             "Full P&amp;R + timing at a declared clock",
-            "1-SM GDS: setup/hold WNS 0 at 50 MHz; slow-corner setup slack +8.986 ns. "
-            "Magic DRC COUNT 0. Netgen: Circuits match uniquely. KLayout DRC was skipped "
-            "(RUN_KLAYOUT_DRC false). Slow corner: 8 max-slew, 37 max-fanout violations. "
-            "2-SM/4-slot P&amp;R stopped in detailed routing; no GDS.",
-            "Yes — 1-SM GDS only",
+            "2-SM + SRAM GDS (CI d69796a): setup slack slow/typ/fast +7.46 / +10.14 / +10.69 ns "
+            "at 50 MHz, worst hold +0.11 ns. Magic DRC 0, LVS clean, antenna 0, route DRC 0. "
+            "Slow corner: 10 max-slew, 41 max-fanout, 8 max-cap (non-blocking). Precheck passes.",
+            "Yes",
         ),
         (
             "Open source; build in public",
@@ -513,14 +514,14 @@ def build():
     )
     story.append(DieVsSource(usable))
     story.append(P(
-        "Figure 1. Closed CMOS5L GDS is the 1-SM engine. The 2-SM / 4-slot source has synth numbers only.",
+        "Figure 1. Closed CMOS5L GDS is the 2-SM / 4-slot loom_chip with IHP SRAM. The 1-SM GDS is superseded.",
         st["cap"],
     ))
     story.append(
         P(
             "k-induction now includes 2-SM fetch and CSR writes (formal_chip). iverilog protocol "
             "Hi tests still target loom_engine (1 SM). Dual-SM UART+SPI on disjoint pins is "
-            "tests/test_infra_desk.py T7. Closed GDS remains the 1-SM engine.",
+            "tests/test_infra_desk.py T7. Dual-SM at gate level is the UART round-trip in test/test.py.",
             st["body"],
         )
     )
@@ -724,8 +725,8 @@ def build():
         ),
         (
             "Gate-level cocotb",
-            "test/test.py",
-            "Partial — idle only (run=0)",
+            "test/test.py on the hardened netlist",
+            "Yes — UART Hi: SM0 TX, pin0 loopback, SM1 RX, host pop",
         ),
         (
             "Non-default clkdiv / wrap / sideset in k-induction",
@@ -849,11 +850,10 @@ def build():
     ))
     story.append(
         P(
-            "After fabrication of the closed 1-SM GDS, a host could in principle load "
+            "After fabrication of the closed GDS, a host could in principle load "
             "uart_8n1 or spi or i2c_od and bit-bang those byte-level contracts on 8 GPIO, "
             "at rates the 50 MHz divider can hit. That is an architectural claim plus "
-            "simulation. It has not been demonstrated. The 2-SM / 4-slot source would add "
-            "concurrent graphs; that netlist has no GDS.",
+            "simulation plus one gate-level UART round-trip. It has not been demonstrated on a pin.",
             st["body"],
         )
     )
@@ -865,10 +865,8 @@ def build():
         ("Sign-up form on the contest page", "Required to receive the submission link. Not a commit."),
         ("Final submission by 2027-01-18", "Form is not on the page yet; nothing submitted."),
         ("FPGA smoke of UART Hi on a pin", "Named in the brief. No board log in this tree."),
-        ("P&amp;R / GDS of the 2-SM / 4-slot netlist", "Synth fits 6×4; LibreLane stopped in detailed routing."),
-        ("KLayout DRC", "Skipped on the closed 1-SM run (RUN_KLAYOUT_DRC false). Magic DRC was 0."),
-        ("Gate-level UART Hi", "cocotb GATES=yes presently asserts only that run=0 after reset."),
-        ("k-induction of loom_chip, clkdiv, wrap, sideset, CRC MOV", "Harness is 1-SM defaults; CRC MOV unconstrained."),
+        ("Gate-level traffic for SPI / I2C / others", "Only UART runs on the hardened netlist."),
+        ("k-induction of clkdiv, wrap, sideset on loom_chip", "ISA harness is 1-SM defaults."),
         ("End-to-end formal of a protocol waveform on RTL", "Not done for any named protocol."),
         ("CAN analog PHY / multi-node arbitration", "Interpreter codec is a 1-byte stuffed data frame on GPIO+clock."),
         ("Any T1–T8 desk test (USB-UART, W25, EEPROM, TAP, DPIDR)", "Simulation and models only."),
@@ -884,7 +882,8 @@ def build():
         callout(
             "<b>Bottom line against the brief.</b> Architecture matches: a PIO-class "
             "reprogrammable pin/time engine, open source, on the CMOS5L 6×4 template, "
-            "with a timing-closed 1-SM GDS. UART, SPI (mode-0 with CS), and open-drain I2C "
+            "with a timing-closed 2-SM / 4-slot / SRAM GDS and a UART round-trip on that netlist. "
+            "UART, SPI (mode-0 with CS), and open-drain I2C "
             "graphs exist and are exhaustive codecs on the interpreter. Stretch USB and "
             "Ethernet are digital line languages (NRZI packet; 802.3 framing on clock+data), "
             "not analog PHYs, and those codecs are proven 0..255 on the interpreter. "

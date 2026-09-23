@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.2
+
+- 2-SM / 4-slot / IHP SRAM GDS closed in CI (`d69796a`): 5,086 std cells + macro, Magic DRC 0, LVS clean, slow setup +7.46 ns; precheck and gl_test pass
+- PDN straps the SRAM on Metal4; Magic DRC blackboxes the macro
+- Gate-level UART round-trip on the hardened netlist: SM0 TX → pin0 loopback → SM1 RX → host pop (`test/test.py`); `test/run_cocotb.py` runs it without make
+- README / exec summary / criteria match the closed 2-SM GDS
+
 ## 0.5.1
 
 - 2-SM k-induction: host CSR writes (SM0/SM1 slot, clkdiv, wrap, sideset, fifo_sel)
