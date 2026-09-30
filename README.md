@@ -10,8 +10,8 @@ Everything below is stated as tested, simulated, synthesised, or not done. Nothi
 
 | Item | State |
 |---|---|
-| GDS on CMOS5L, 6×4 | Closed **2-SM / 4-slot** GDS (`tt_submission`, CI run on `d69796a`): 5,086 std cells + IHP `RM_IHPSG13_2P_256x16_c2_bm_bist` SRAM macro, 14.3% util, Magic DRC 0, LVS clean, antenna 0, slow setup **+7.46 ns**. This is the current `src/project.v` (`loom_chip`). Python tests keep a 1-cycle Array model of the SRAM. |
-| Timing at 50 MHz | Closed 2-SM part: setup slack slow/typ/fast +7.46 / +10.14 / +10.69 ns, worst hold +0.11 ns. 2-SM fetch is registered (`next_pc` ADDR). `clkdiv=0` is a 65536-cycle period. |
+| GDS on CMOS5L, 6×4 | Closed **2-SM / 4-slot** GDS (`tt_submission`, CI run on `71bed4a`): 5,082 std cells + IHP `RM_IHPSG13_2P_256x16_c2_bm_bist` SRAM macro, 14.3% util, Magic DRC 0, LVS clean, antenna 0, slow setup **+7.66 ns**. This is the current `src/project.v` (`loom_chip`). Python tests keep a 1-cycle Array model of the SRAM. |
+| Timing at 50 MHz | Closed 2-SM part: setup slack slow/typ/fast +7.66 / +10.15 / +10.70 ns, worst hold +0.13 ns. 2-SM fetch is registered (`next_pc` ADDR). `clkdiv=0` is a 65536-cycle period. |
 | Protocol graphs | UART (hello + 8N1), SPI mode 0 + CS, I2C open-drain, JTAG TMS TAP, SWD, PS/2, CAN, USB low-speed, Ethernet framing. All fit in 32 words. |
 | Exhaustive protocol check | Every byte 0..255 on all 10 TX/RX pairs, on the Python interpreter, against independent spec languages (`loom formal-proto`). |
 | ISA formal | k-induction (yosys `sat -tempinduct`, 12 steps) on 1-SM ISA + CRC MOV 7–11 + host CSR writes; ClockedImem contract; 2-SM fetch + SM0/SM1 CSR writes. Passes. |
@@ -52,16 +52,18 @@ Not verified: any transfer against a real peer device, FPGA bring-up. Gate-level
 
 ## Area and timing
 
-Numbers from the CI GDS run on commit `d69796a` (`tt_submission` artifact, `stats/metrics.csv`, 2 SM / 4 slots / IHP SRAM):
+Numbers from the CI GDS run on commit `71bed4a` (`tt_submission` artifact, `stats/metrics.csv`, 2 SM / 4 slots / IHP SRAM):
 
 | Metric | Value |
 |---|---|
-| Std cells | 5,086 (+ 1 SRAM macro) |
+| Std cells | 5,082 (+ 1 SRAM macro) |
 | Std cell area | 71,469 µm²; macro 57,521 µm²; 14.3% of the 6×4 core |
-| Setup slack, slow / typ / fast | +7.46 / +10.14 / +10.69 ns |
-| Hold slack, worst | +0.11 ns (fast corner) |
+| Setup slack, slow / typ / fast | +7.66 / +10.15 / +10.70 ns |
+| Hold slack, worst | +0.13 ns (fast corner) |
 | Magic DRC / LVS / antenna / route DRC | 0 / clean / 0 / 0 |
-| Slew / fanout / cap violations (slow corner) | 10 / 41 / 8 (non-blocking; precheck passes) |
+| Slew / fanout / cap violations (slow corner) | 12 / 41 / 11 (non-blocking; precheck passes) |
+| Worst IR drop VPWR / VGND (typ) | 0.24 / 0.19 mV |
+| Supply connectivity (OpenROAD PSM, KLayout extraction) | 0 violations, PASS |
 
 `estimates/synth.txt` is a generic Yosys estimate from an earlier revision and is not a P&R number. `loom_chip` instantiates IHP `RM_IHPSG13_2P_256x16_c2_bm_bist` (`src/macros/`, `docs/SRAM-IMEM-PLAN.md`). The earlier 1-SM GDS (3,499 cells, +8.99 ns) is superseded.
 
