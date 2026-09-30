@@ -77,6 +77,8 @@ Tiny Tapeout CMOS5L allows only Metal4 for the power pins and forbids TopMetal1,
 
 Two programmatic checks cover it. LibreLane runs OpenROAD `check_power_grid` on the ODB after PDN generation (metric `design__power_grid_violation__count`). Independently, `make check-pg` runs `scripts/check_pg_klayout.py`, which extracts Metal1–Metal4 connectivity from the final GDS with KLayout and requires VPWR and VGND to be single nets that contain every SRAM supply pin; it also reports the Metal4 feed width per pin. CI runs the same check on the `tt_submission` GDS (`power_grid` job in `gds.yaml`).
 
+`make check-pins` (`scripts/check_pins_klayout.py`, same CI job) does the equivalent for the 43 signal pins: each `ui_in`, `uo_out`, `uio_*`, `ena`, `clk`, `rst_n` pin must sit on Metal4 inside its Tiny Tapeout template rectangle, be on a net that carries no other port label (no pin-to-pin or pin-to-supply short), and reach at least one logic standard cell. Netgen LVS (`Circuits match uniquely`) and the gate netlist (every port bit wired, every output bit driven by a cell) cover the same question from the netlist side.
+
 ## Install and run
 
 ```

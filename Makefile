@@ -1,7 +1,7 @@
 PYTHON ?= .venv/bin/python
 export PYTHONPATH := generator
 
-.PHONY: test test-verilog test-exhaustive formal verify emit check plans synth ci check-pg
+.PHONY: test test-verilog test-exhaustive formal verify emit check plans synth ci check-pg check-pins
 
 test:
 	$(PYTHON) -m pytest tests -k 'not verilog'
@@ -38,3 +38,7 @@ GDS ?= tt_submission/tt_um_loom_gpe.gds
 check-pg:  # supply connectivity of the hardened GDS: VPWR/VGND single nets, every SRAM pin on them
 	docker run --rm -v "$(CURDIR):$(CURDIR)" -w "$(CURDIR)" ghcr.io/librelane/librelane:3.1.0.dev3 \
 	  klayout -b -r scripts/check_pg_klayout.py -rd gds=$(GDS) -rd lef=src/macros/RM_IHPSG13_2P_256x16_c2_bm_bist.lef
+
+check-pins:  # every TT pin: at template position, own net (no shorts), reaches logic cells
+	docker run --rm -v "$(CURDIR):$(CURDIR)" -w "$(CURDIR)" ghcr.io/librelane/librelane:3.1.0.dev3 \
+	  klayout -b -r scripts/check_pins_klayout.py -rd gds=$(GDS) -rd template=tt/tech/ihp-sg13cmos5l/def/tt_block_6x4_pgvdd.def

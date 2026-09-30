@@ -46,9 +46,17 @@ jobs:
               -rd lef=src/macros/RM_IHPSG13_2P_256x16_c2_bm_bist.lef | tee power_grid.txt
           grep -q '^PASS' power_grid.txt
 
+      - name: Every TT pin present, unshorted, wired to logic (KLayout net extraction)
+        run: |
+          docker run --rm -v "$PWD:$PWD" -w "$PWD" ghcr.io/librelane/librelane:3.1.0.dev3 \
+            klayout -b -r scripts/check_pins_klayout.py \
+              -rd gds=tt_submission/tt_submission/tt_um_loom_gpe.gds \
+              -rd template=tt/tech/ihp-sg13cmos5l/def/tt_block_6x4_pgvdd.def | tee pins.txt
+          grep -q '^PASS' pins.txt
+
       - name: summary
         if: always()
-        run: cat power_grid.txt >> $GITHUB_STEP_SUMMARY
+        run: cat power_grid.txt pins.txt >> $GITHUB_STEP_SUMMARY
 
   gl_test:
     needs: gds

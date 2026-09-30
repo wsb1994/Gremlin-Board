@@ -3,6 +3,7 @@
 ## 0.5.3
 
 - PDN: Metal4 straps through the SRAM column at the macro's own supply-pin positions (`sramcol`); full-width Metal4 bridges with Via3 rows on all 72 SRAM supply-pin edges, geometry read from the placed instance
+- `scripts/check_pins_klayout.py` + `make check-pins`: all 43 TT pins at template position, unshorted, wired to logic (KLayout)
 - `scripts/check_pg_klayout.py` + `make check-pg`: KLayout net extraction of the final GDS, VPWR/VGND single nets containing every SRAM pin; CI `power_grid` job
 
 ## 0.5.2
