@@ -31,8 +31,13 @@ jobs:
     steps:
       - name: checkout repo
         uses: actions/checkout@v6
+
+      - name: checkout tt-support-tools (pin template DEF)
+        uses: actions/checkout@v6
         with:
-          submodules: recursive
+          repository: TinyTapeout/tt-support-tools
+          ref: ihp-sg13cmos5l
+          path: tt
 
       - name: download hardened GDS
         uses: actions/download-artifact@v7
