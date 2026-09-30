@@ -31,6 +31,8 @@ jobs:
     steps:
       - name: checkout repo
         uses: actions/checkout@v6
+        with:
+          submodules: recursive
 
       - name: download hardened GDS
         uses: actions/download-artifact@v7
