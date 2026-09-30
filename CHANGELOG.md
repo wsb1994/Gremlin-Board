@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.3
+
+- PDN: Metal4 straps through the SRAM column at the macro's own supply-pin positions (`sramcol`); full-width Metal4 bridges with Via3 rows on all 72 SRAM supply-pin edges, geometry read from the placed instance
+- `scripts/check_pg_klayout.py` + `make check-pg`: KLayout net extraction of the final GDS, VPWR/VGND single nets containing every SRAM pin; CI `power_grid` job
+
 ## 0.5.2
 
 - 2-SM / 4-slot / IHP SRAM GDS closed in CI (`d69796a`): 5,086 std cells + macro, Magic DRC 0, LVS clean, slow setup +7.46 ns; precheck and gl_test pass

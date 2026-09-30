@@ -200,43 +200,98 @@ if { $::env(PDN_CORE_RING) == 1 } {
 }
 
 # CMOS5L precheck forbids TopMetal1 and TopVia1, and pdngen will not
-# paint Metal4 across the SRAM (the pins themselves are obstructions).
-# These Metal3 bars sit in the placement halo and via down onto the core
-# Metal4 straps. After pdngen, loom_tie_sram_pins overlaps each SRAM
-# power pin with a Metal4 bridge and a Via3 onto the matching bar.
-# Offsets are from the core origin (x 2.880, y 3.780).
+# paint Metal4 across the SRAM (its Metal4 is an obstruction). The
+# stdcell_grid straps are Metal4 *pins* and must span the die, so the
+# eight strap positions the macro would cut are left out of that grid
+# above. Supply for the SRAM and for the standard cells in its column
+# comes from three pieces, all on layers the precheck allows:
+#
+#  1. sramcol: non-pin Metal4 straps at the macro's own VDD!/VSS! pin
+#     columns. pdngen clips them at the macro, leaving a full-height
+#     segment below it (rails via up to it) and a short one above.
+#  2. sramtie: Metal3 bars in the halo bands just below (VGND, VPWR)
+#     and just above (VPWR) the macro. They cross every Metal4 strap,
+#     inside and outside the column, and pdngen vias them together.
+#  3. loom_tie_sram_pins (after pdngen): for every macro supply pin
+#     that reaches the macro edge, a Metal4 bridge of the pin's own
+#     width overlapping the pin, the clipped sramcol strap and the
+#     Metal3 bar, with a row of Via3 cuts onto the bar. Geometry is
+#     read from the placed instance, not typed in.
+#
+# Verify: OpenROAD check_power_grid (run by the flow) and
+# scripts/check_pg_klayout.py on the final GDS.
+
+set ::loom_sram_inst engine.imem.imem_sram
+# Macro-relative x centres of the SRAM supply pins that get a strap.
+# Outer pin groups only: every other VDD!/VSS! pair, 17.68 um apart.
+set ::loom_col_vpwr {8.355 43.715 79.075 114.435 287.835 323.195 358.555 393.915}
+set ::loom_col_vgnd {17.195 52.555 87.915 123.275 296.675 332.035 367.395 402.755}
+
+proc loom_core_origin {} {
+    set block [ord::get_db_block]
+    set dbu [[$block getTech] getDbUnitsPerMicron]
+    set core [$block getCoreArea]
+    return [list [expr {[$core xMin] / double($dbu)}] [expr {[$core yMin] / double($dbu)}]]
+}
+
+proc loom_sram_x {} {
+    set block [ord::get_db_block]
+    set dbu [[$block getTech] getDbUnitsPerMicron]
+    set inst [$block findInst $::loom_sram_inst]
+    if {$inst eq "NULL"} { error "SRAM instance $::loom_sram_inst not placed" }
+    return [expr {[[$inst getBBox] xMin] / double($dbu)}]
+}
+
+define_pdn_grid \
+    -name sramcol \
+    -starts_with POWER \
+    -voltage_domains CORE
+
+lassign [loom_core_origin] core_x core_y
+set sram_x [loom_sram_x]
+foreach {net centres} [list $::env(VDD_NET) $::loom_col_vpwr $::env(GND_NET) $::loom_col_vgnd] {
+    foreach c $centres {
+        add_pdn_stripe \
+            -grid sramcol \
+            -layer Metal4 \
+            -width $::env(PDN_VWIDTH) \
+            -pitch 2000 \
+            -offset [format %.3f [expr {$sram_x + $c - $core_x}]] \
+            -number_of_straps 1 \
+            -nets $net
+    }
+}
+add_pdn_connect -grid sramcol -layers "Metal1 Metal4"
+add_pdn_connect -grid sramcol -layers "Metal3 Metal4"
+
+# Metal3 bars: 3.5 um below the macro (VGND), 7 um below (VPWR), 5 um
+# above (VPWR). Absolute y = core_y + offset.
+set sram_y0 [expr {559.440}]
+set sram_y1 [expr {559.440 + 136.970}]
+set block [ord::get_db_block]
+set inst [$block findInst $::loom_sram_inst]
+set dbu [[$block getTech] getDbUnitsPerMicron]
+set sram_y0 [expr {[[$inst getBBox] yMin] / double($dbu)}]
+set sram_y1 [expr {[[$inst getBBox] yMax] / double($dbu)}]
+set ::loom_bar_vgnd_lo [expr {$sram_y0 - 8.44}]
+set ::loom_bar_vpwr_lo [expr {$sram_y0 - 4.94}]
+set ::loom_bar_vpwr_hi [expr {$sram_y1 + 5.09}]
+
 define_pdn_grid \
     -name sramtie \
     -starts_with POWER \
     -voltage_domains CORE
-
-add_pdn_stripe \
-    -grid sramtie \
-    -layer Metal3 \
-    -width 0.48 \
-    -pitch 2000 \
-    -offset 547.220 \
-    -number_of_straps 1 \
-    -nets $::env(GND_NET)
-add_pdn_stripe \
-    -grid sramtie \
-    -layer Metal3 \
-    -width 0.48 \
-    -pitch 2000 \
-    -offset 550.720 \
-    -number_of_straps 1 \
-    -nets $::env(VDD_NET)
-add_pdn_stripe \
-    -grid sramtie \
-    -layer Metal3 \
-    -width 0.48 \
-    -pitch 2000 \
-    -offset 697.720 \
-    -number_of_straps 1 \
-    -nets $::env(VDD_NET)
-add_pdn_connect \
-    -grid sramtie \
-    -layers "Metal3 Metal4"
+foreach {net y} [list $::env(GND_NET) $::loom_bar_vgnd_lo $::env(VDD_NET) $::loom_bar_vpwr_lo $::env(VDD_NET) $::loom_bar_vpwr_hi] {
+    add_pdn_stripe \
+        -grid sramtie \
+        -layer Metal3 \
+        -width 0.48 \
+        -pitch 2000 \
+        -offset [format %.3f [expr {$y - $core_y}]] \
+        -number_of_straps 1 \
+        -nets $net
+}
+add_pdn_connect -grid sramtie -layers "Metal3 Metal4"
 
 rename pdngen _loom_pdngen_orig
 proc pdngen {args} {
@@ -244,90 +299,72 @@ proc pdngen {args} {
     loom_tie_sram_pins
 }
 
-
 proc loom_tie_sram_pins {} {
-  set block [ord::get_db_block]
-  set tech [$block getTech]
-  set dbu [$tech getDbUnitsPerMicron]
-  set m4 [$tech findLayer Metal4]
-  set via [$tech findVia Via3_XX]
-  if {$via eq "NULL"} { error "Via3_XX not found" }
-  foreach {netname cx y0 y1 vy} {
-    VGND 837.155 550.500 696.410 551.000
-    VGND 819.475 550.500 696.410 551.000
-    VGND 801.795 550.500 696.410 551.000
-    VGND 784.115 550.500 696.410 551.000
-    VGND 766.435 550.500 696.410 551.000
-    VGND 748.755 550.500 696.410 551.000
-    VGND 731.075 550.500 696.410 551.000
-    VGND 713.395 550.500 696.410 551.000
-    VGND 683.000 550.500 696.410 551.000
-    VGND 672.700 550.500 696.410 551.000
-    VGND 657.250 550.500 696.410 551.000
-    VGND 646.950 550.500 696.410 551.000
-    VGND 641.800 550.500 696.410 551.000
-    VGND 631.500 550.500 696.410 551.000
-    VGND 616.050 550.500 696.410 551.000
-    VGND 605.750 550.500 696.410 551.000
-    VGND 575.355 550.500 696.410 551.000
-    VGND 557.675 550.500 696.410 551.000
-    VGND 539.995 550.500 696.410 551.000
-    VGND 522.315 550.500 696.410 551.000
-    VGND 504.635 550.500 696.410 551.000
-    VGND 486.955 550.500 696.410 551.000
-    VGND 469.275 550.500 696.410 551.000
-    VGND 451.595 550.500 696.410 551.000
-    VPWR 845.995 554.200 606.335 554.500
-    VPWR 828.315 554.200 606.335 554.500
-    VPWR 810.635 554.200 606.335 554.500
-    VPWR 792.955 554.200 606.335 554.500
-    VPWR 775.275 554.200 606.335 554.500
-    VPWR 757.595 554.200 606.335 554.500
-    VPWR 739.915 554.200 606.335 554.500
-    VPWR 722.235 554.200 606.335 554.500
-    VPWR 677.850 554.200 696.410 554.500
-    VPWR 667.550 554.200 696.410 554.500
-    VPWR 662.400 554.200 696.410 554.500
-    VPWR 652.100 554.200 696.410 554.500
-    VPWR 636.650 554.200 696.410 554.500
-    VPWR 626.350 554.200 696.410 554.500
-    VPWR 621.200 554.200 696.410 554.500
-    VPWR 610.900 554.200 696.410 554.500
-    VPWR 566.515 554.200 606.335 554.500
-    VPWR 548.835 554.200 606.335 554.500
-    VPWR 531.155 554.200 606.335 554.500
-    VPWR 513.475 554.200 606.335 554.500
-    VPWR 495.795 554.200 606.335 554.500
-    VPWR 478.115 554.200 606.335 554.500
-    VPWR 460.435 554.200 606.335 554.500
-    VPWR 442.755 554.200 606.335 554.500
-    VPWR 845.995 613.050 701.800 701.500
-    VPWR 828.315 613.050 701.800 701.500
-    VPWR 810.635 613.050 701.800 701.500
-    VPWR 792.955 613.050 701.800 701.500
-    VPWR 775.275 613.050 701.800 701.500
-    VPWR 757.595 613.050 701.800 701.500
-    VPWR 739.915 613.050 701.800 701.500
-    VPWR 722.235 613.050 701.800 701.500
-    VPWR 566.515 613.050 701.800 701.500
-    VPWR 548.835 613.050 701.800 701.500
-    VPWR 531.155 613.050 701.800 701.500
-    VPWR 513.475 613.050 701.800 701.500
-    VPWR 495.795 613.050 701.800 701.500
-    VPWR 478.115 613.050 701.800 701.500
-    VPWR 460.435 613.050 701.800 701.500
-    VPWR 442.755 613.050 701.800 701.500
-  } {
-    set net [$block findNet $netname]
-    set sw [odb::dbSWire_create $net ROUTED]
-    set x0 [expr {int(round(($cx - 0.18) * $dbu))}]
-    set x1 [expr {int(round(($cx + 0.18) * $dbu))}]
-    set iy0 [expr {int(round($y0 * $dbu))}]
-    set iy1 [expr {int(round($y1 * $dbu))}]
-    odb::dbSBox_create $sw $m4 $x0 $iy0 $x1 $iy1 STRIPE
-    set vx [expr {int(round($cx * $dbu))}]
-    set vyi [expr {int(round($vy * $dbu))}]
-    odb::dbSBox_create $sw $via $vx $vyi STRIPE
-  }
-  puts "LOOM: tied SRAM power pins"
+    set block [ord::get_db_block]
+    set tech [$block getTech]
+    set dbu [$tech getDbUnitsPerMicron]
+    set m4 [$tech findLayer Metal4]
+    set via [$tech findVia Via3_XX]
+    if {$via eq "NULL"} { error "Via3_XX not found" }
+    set inst [$block findInst $::loom_sram_inst]
+    if {[$inst getOrient] ne "R0"} { error "loom_tie_sram_pins: only orientation N is handled" }
+    lassign [$inst getOrigin] ox oy
+    set bb [$inst getBBox]
+    set y0 [$bb yMin]
+    set y1 [$bb yMax]
+    set netmap [dict create VDD! $::env(VDD_NET) VDDARRAY! $::env(VDD_NET) VSS! $::env(GND_NET)]
+    set bars [dict create \
+        bottom,$::env(GND_NET) $::loom_bar_vgnd_lo \
+        bottom,$::env(VDD_NET) $::loom_bar_vpwr_lo \
+        top,$::env(VDD_NET) $::loom_bar_vpwr_hi]
+    set reach_out [expr {int(round(10.0 * $dbu))}]   ;# beyond the macro edge (halo band)
+    set reach_in  [expr {int(round(8.0 * $dbu))}]    ;# overlap into the pin
+    set inset     [expr {int(round(0.1 * $dbu))}]    ;# bridge sits strictly inside the pin outline (Magic subcell-overlap rule)
+    set cut_pitch [expr {int(round(0.7 * $dbu))}]    ;# Magic V3.b wants >= 0.42 um between cuts
+    # Where a sramcol strap crosses the bar, pdngen already placed a via
+    # array; extra single cuts there abut it (Magic). Keep clear of them.
+    set keep_out [expr {int(round(($::env(PDN_VWIDTH) / 2.0 + 0.45) * $dbu))}]
+    set strap_xs [list]
+    foreach c [concat $::loom_col_vpwr $::loom_col_vgnd] {
+        lappend strap_xs [expr {$ox + int(round($c * $dbu))}]
+    }
+    set n 0
+    foreach mterm [[$inst getMaster] getMTerms] {
+        set pname [$mterm getName]
+        if {![dict exists $netmap $pname]} { continue }
+        set netname [dict get $netmap $pname]
+        set net [$block findNet $netname]
+        foreach mpin [$mterm getMPins] {
+            foreach geom [$mpin getGeometry] {
+                if {[[$geom getTechLayer] getName] ne "Metal4"} { continue }
+                set rx0 [expr {[$geom xMin] + $ox + $inset}]; set rx1 [expr {[$geom xMax] + $ox - $inset}]
+                set ry0 [expr {[$geom yMin] + $oy}]; set ry1 [expr {[$geom yMax] + $oy}]
+                foreach side {bottom top} {
+                    if {$side eq "bottom" && $ry0 != $y0} { continue }
+                    if {$side eq "top" && $ry1 != $y1} { continue }
+                    if {![dict exists $bars $side,$netname]} { continue }
+                    set bar_y [expr {int(round([dict get $bars $side,$netname] * $dbu))}]
+                    if {$side eq "bottom"} {
+                        set by0 [expr {$y0 - $reach_out}]; set by1 [expr {$y0 + $reach_in}]
+                    } else {
+                        set by0 [expr {$y1 - $reach_in}]; set by1 [expr {$y1 + $reach_out}]
+                    }
+                    set sw [odb::dbSWire_create $net ROUTED]
+                    odb::dbSBox_create $sw $m4 $rx0 $by0 $rx1 $by1 STRIPE
+                    # row of single cuts across the pin width, 0.6 um pitch, 0.5 um in from each side
+                    set cx0 [expr {$rx0 + int(round(0.5 * $dbu))}]
+                    set cx1 [expr {$rx1 - int(round(0.5 * $dbu))}]
+                    for {set cx $cx0} {$cx <= $cx1} {incr cx $cut_pitch} {
+                        set clear 1
+                        foreach sx $strap_xs {
+                            if {abs($cx - $sx) < $keep_out} { set clear 0; break }
+                        }
+                        if {$clear} { odb::dbSBox_create $sw $via $cx $bar_y STRIPE }
+                    }
+                    incr n
+                }
+            }
+        }
+    }
+    puts "LOOM: tied $n SRAM supply pin edges (Metal4 bridges + Via3 rows)"
 }

@@ -25,6 +25,31 @@ jobs:
       - name: Run Tiny Tapeout Precheck
         uses: TinyTapeout/tt-gds-action/precheck@ihp-cmos5l
 
+  power_grid:
+    needs: gds
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v6
+
+      - name: download hardened GDS
+        uses: actions/download-artifact@v7
+        with:
+          name: tt_submission
+          path: tt_submission
+
+      - name: SRAM + stdcell supply connectivity (KLayout net extraction)
+        run: |
+          docker run --rm -v "$PWD:$PWD" -w "$PWD" ghcr.io/librelane/librelane:3.1.0.dev3 \
+            klayout -b -r scripts/check_pg_klayout.py \
+              -rd gds=tt_submission/tt_submission/tt_um_loom_gpe.gds \
+              -rd lef=src/macros/RM_IHPSG13_2P_256x16_c2_bm_bist.lef | tee power_grid.txt
+          grep -q '^PASS' power_grid.txt
+
+      - name: summary
+        if: always()
+        run: cat power_grid.txt >> $GITHUB_STEP_SUMMARY
+
   gl_test:
     needs: gds
     runs-on: ubuntu-24.04

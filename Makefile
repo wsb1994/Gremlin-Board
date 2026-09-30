@@ -1,7 +1,7 @@
 PYTHON ?= .venv/bin/python
 export PYTHONPATH := generator
 
-.PHONY: test test-verilog test-exhaustive formal verify emit check plans synth ci
+.PHONY: test test-verilog test-exhaustive formal verify emit check plans synth ci check-pg
 
 test:
 	$(PYTHON) -m pytest tests -k 'not verilog'
@@ -33,3 +33,8 @@ synth:
 	$(PYTHON) -m loom synth
 
 ci: check test emit
+
+GDS ?= tt_submission/tt_um_loom_gpe.gds
+check-pg:  # supply connectivity of the hardened GDS: VPWR/VGND single nets, every SRAM pin on them
+	docker run --rm -v "$(CURDIR):$(CURDIR)" -w "$(CURDIR)" ghcr.io/librelane/librelane:3.1.0.dev3 \
+	  klayout -b -r scripts/check_pg_klayout.py -rd gds=$(GDS) -rd lef=src/macros/RM_IHPSG13_2P_256x16_c2_bm_bist.lef
